@@ -648,25 +648,38 @@ async function createAcc(){
     user.rate=parseInt(document.getElementById('su-rate')?.value)||25;
     user.company=document.getElementById('su-comp')?.value||'';
     user.industry=document.getElementById('su-ind')?.value||'';
-    document.getElementById('succ-msg').textContent='Welcome, '+n+'! Your '+selRole+' profile is live.';
+    // Check if email confirmation is required
+    if(data.user && !data.session){
+      // Email confirmation required
+      document.getElementById('succ-msg').textContent='Almost there, '+n+'! Check your email ('+e+') and click the confirmation link to activate your account.';
+      document.querySelector('#s-succ .bfull').textContent='Back to Login';
+      document.querySelector('#s-succ .bfull').onclick = ()=>go('s-login');
+      document.querySelector('#s-succ .succ-circle').textContent='📧';
+    } else {
+      document.getElementById('succ-msg').textContent='Welcome, '+n+'! Your '+selRole+' profile is live.';
+      document.querySelector('#s-succ .bfull').textContent='Enter Ideax →';
+      document.querySelector('#s-succ .bfull').onclick = ()=>launch();
+    }
     go('s-succ');
   }catch(err){
     let msg = err.message || 'Signup failed. Try again.';
     if(msg.toLowerCase().includes('already registered') || 
        msg.toLowerCase().includes('already exists') ||
        msg.toLowerCase().includes('user already') ||
-       msg.toLowerCase().includes('email address is already')){
-      msg = '⚠️ This email already has an account. Please log in instead.';
-      // Highlight login link
-      showAuthError('su3', msg);
-      setTimeout(()=>go('s-login'), 2500);
+       msg.toLowerCase().includes('email address is already') ||
+       msg.toLowerCase().includes('duplicate')){
+      showAuthError('su3', '⚠️ This email already has an account. Redirecting to login...');
+      setTimeout(()=>go('s-login'), 2000);
       return;
     }
     if(msg.toLowerCase().includes('password')){
       msg = '⚠️ Password must be at least 6 characters.';
     }
-    if(msg.toLowerCase().includes('invalid email')){
+    if(msg.toLowerCase().includes('invalid email') || msg.toLowerCase().includes('valid email')){
       msg = '⚠️ Please enter a valid email address.';
+    }
+    if(msg.toLowerCase().includes('rate limit')){
+      msg = '⚠️ Too many attempts. Please wait a moment and try again.';
     }
     showAuthError('su3', msg);
   }finally{btn.textContent='Create My Account 🚀';btn.disabled=false;}
@@ -1059,48 +1072,69 @@ async function handleAvatarUpload(input){
   const file = input.files[0];
   if(!file) return;
   if(file.size > 5*1024*1024){alert('Image too large. Max 5MB.');return;}
-  
-  // Show preview immediately
+
+  // Always show preview immediately from local file
   const reader = new FileReader();
   reader.onload = e=>{
     document.getElementById('av-img').src = e.target.result;
     document.getElementById('av-img').style.display = 'block';
     document.getElementById('av-initials').style.display = 'none';
+    // Store base64 locally as fallback
+    window._localAvatarBase64 = e.target.result;
+    window._localAvatarFile = file;
   };
   reader.readAsDataURL(file);
 
-  // Upload to Supabase Storage
+  // Try uploading to Supabase in background
   const progress = document.getElementById('upload-progress');
   const bar = document.getElementById('upload-bar');
   progress.style.display = 'block';
-  bar.style.width = '30%';
+  bar.style.width = '20%';
 
   try{
-    let { data: { session } } = await sb.auth.getSession();
-    // If no session, try refreshing once
-    if(!session){
-      const refreshed = await sb.auth.refreshSession();
-      session = refreshed.data.session;
+    // Try to get session with multiple attempts
+    let session = null;
+    for(let attempt = 0; attempt < 3; attempt++){
+      const { data } = await sb.auth.getSession();
+      if(data.session){ session = data.session; break; }
+      const { data: refreshData } = await sb.auth.refreshSession();
+      if(refreshData.session){ session = refreshData.session; break; }
+      await new Promise(r => setTimeout(r, 1000));
     }
+
     if(!session){
-      // If still no session, save locally only (show preview, upload on save)
+      // No session — save file reference for upload on Save
       currentAvatarUrl = '__local__';
       progress.style.display='none';
+      showToast('Photo selected — will upload when you save ✓');
       return;
     }
-    const ext = file.name.split('.').pop();
-    const path = `${session.user.id}/avatar.${ext}`;
-    bar.style.width = '60%';
-    const {data, error} = await sb.storage.from('avatars').upload(path, file, {upsert:true});
+
+    bar.style.width = '50%';
+    const ext = file.name.split('.').pop().toLowerCase();
+    const validExts = ['jpg','jpeg','png','gif','webp'];
+    const finalExt = validExts.includes(ext) ? ext : 'jpg';
+    const path = userId + '/avatar.' + finalExt;
+
+    const {data, error} = await sb.storage.from('avatars').upload(path, file, {
+      upsert: true,
+      contentType: file.type || 'image/jpeg'
+    });
     if(error) throw error;
+
     bar.style.width = '100%';
-    const {data:{publicUrl}} = sb.storage.from('avatars').getPublicUrl(path);
-    currentAvatarUrl = publicUrl;
+    const { data: { publicUrl } } = sb.storage.from('avatars').getPublicUrl(path);
+    currentAvatarUrl = publicUrl + '?t=' + Date.now();
+    window._localAvatarFile = null;
+    showToast('Photo uploaded! ✓');
     setTimeout(()=>{progress.style.display='none';bar.style.width='0%';},800);
+
   }catch(err){
     progress.style.display='none';
-    console.error('Upload error:',err);
-    alert('Photo upload failed: '+err.message);
+    console.error('Upload error:',err.message);
+    // Don't alert — just keep local preview and upload on save
+    currentAvatarUrl = '__local__';
+    showToast('Photo saved locally — will upload on save ✓');
   }
 }
 
@@ -1129,30 +1163,42 @@ async function saveProfile(){
   const linkedin = document.getElementById('ep-linkedin').value.trim();
 
   try{
-    let { data: { session } } = await sb.auth.getSession();
-    if(!session){
-      const refreshed = await sb.auth.refreshSession();
-      session = refreshed.data.session;
+    // Get current user directly - more reliable than getSession
+    const { data: { user: authUser }, error: userError } = await sb.auth.getUser();
+    
+    // If no user, try refreshing session
+    let session = null;
+    if(!authUser){
+      const { data: refreshData } = await sb.auth.refreshSession();
+      session = refreshData.session;
+      if(!session) throw new Error('Session expired. Please log out and log in again.');
     }
-    if(!session) throw new Error('Please log in again to save your profile.');
+    
+    const userId = authUser ? authUser.id : session.user.id;
+    if(!userId) throw new Error('Could not get user ID. Please log in again.');
 
-    // If avatar was selected but not uploaded yet (no session at upload time), upload now
-    if(currentAvatarUrl === '__local__'){
-      const fileInput = document.getElementById('av-gallery').files[0] || document.getElementById('av-file').files[0];
-      if(fileInput){
-        const ext = fileInput.name.split('.').pop();
-        const path = `${session.user.id}/avatar.${ext}`;
-        const {data, error} = await sb.storage.from('avatars').upload(path, fileInput, {upsert:true});
+    // If avatar was selected but not uploaded yet, upload now
+    if(currentAvatarUrl === '__local__' && window._localAvatarFile){
+      try{
+        const fileInput = window._localAvatarFile;
+        const ext = fileInput.name.split('.').pop().toLowerCase();
+        const validExts = ['jpg','jpeg','png','gif','webp'];
+        const finalExt = validExts.includes(ext) ? ext : 'jpg';
+        const path = userId + '/avatar.' + finalExt;
+        const {data, error} = await sb.storage.from('avatars').upload(path, fileInput, {
+          upsert:true, contentType: fileInput.type||'image/jpeg'
+        });
         if(!error){
           const {data:{publicUrl}} = sb.storage.from('avatars').getPublicUrl(path);
-          currentAvatarUrl = publicUrl;
+          currentAvatarUrl = publicUrl + '?t=' + Date.now();
+          window._localAvatarFile = null;
         }
-      }
+      }catch(e){ console.error('Save-time upload failed:',e); }
     }
 
     // Upsert profile in DB
     const {error} = await sb.from('profiles').upsert({
-      id: session.user.id,
+      id: userId,
       username, full_name:n, bio, role:user.role,
       skill, rate, location,
       avatar_url: (currentAvatarUrl && currentAvatarUrl !== '__local__') ? currentAvatarUrl : (user.avatarUrl || ''),
@@ -1161,7 +1207,7 @@ async function saveProfile(){
     if(error) throw error;
 
     // Update auth metadata
-    await sb.auth.updateUser({data:{full_name:n, role:user.role, skill, rate, username}});
+    try{ await sb.auth.updateUser({data:{full_name:n, role:user.role, skill, rate, username}}); }catch(e){ console.log('metadata update:',e); }
 
     // Update local user state
     user.name=n; user.ini=ini(n); user.username=username;
@@ -1170,14 +1216,17 @@ async function saveProfile(){
     user.website=website; user.twitter=twitter; user.linkedin=linkedin;
     if(currentAvatarUrl) user.avatarUrl=currentAvatarUrl;
 
-    // Update UI
+    // Update UI avatars
+    const finalAvatar = (currentAvatarUrl && currentAvatarUrl !== '__local__') ? currentAvatarUrl : (window._localAvatarBase64 || user.avatarUrl || '');
+    if(finalAvatar) user.avatarUrl = finalAvatar;
     ['sb-av','tb-av','c-av','mp-av','my-av'].forEach(id=>{
       const el=document.getElementById(id);
       if(el){
         if(user.avatarUrl){
-          el.style.backgroundImage=`url(${user.avatarUrl})`;
+          el.style.backgroundImage='url('+user.avatarUrl+')';
           el.style.backgroundSize='cover';
           el.style.backgroundPosition='center';
+          el.style.backgroundRepeat='no-repeat';
           el.textContent='';
         } else {
           el.textContent=user.ini;
