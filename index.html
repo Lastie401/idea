@@ -1342,6 +1342,407 @@ function showToast(msg){
 }
 
 function doSearch(q){if(!q)return;const pid=Object.keys(profiles).find(k=>profiles[k].name.toLowerCase().includes(q.toLowerCase()));if(pid)viewProfile(pid);}
+
+
+// ============ THEME ============
+function setTheme(theme){
+  if(theme==='light'){
+    document.body.classList.add('light-mode');
+    document.getElementById('theme-dark').style.cssText='padding:7px 16px;border-radius:20px;border:1.5px solid var(--border2);background:transparent;color:var(--text2);font-size:12px;cursor:pointer;font-family:var(--fb);font-weight:600;';
+    document.getElementById('theme-light').style.cssText='padding:7px 16px;border-radius:20px;border:1.5px solid var(--accent);background:var(--accent);color:#fff;font-size:12px;cursor:pointer;font-family:var(--fb);font-weight:600;';
+  } else {
+    document.body.classList.remove('light-mode');
+    document.getElementById('theme-dark').style.cssText='padding:7px 16px;border-radius:20px;border:1.5px solid var(--accent);background:var(--accent);color:#fff;font-size:12px;cursor:pointer;font-family:var(--fb);font-weight:600;';
+    document.getElementById('theme-light').style.cssText='padding:7px 16px;border-radius:20px;border:1.5px solid var(--border2);background:transparent;color:var(--text2);font-size:12px;cursor:pointer;font-family:var(--fb);font-weight:600;';
+  }
+  localStorage.setItem('ideax-theme',theme);
+}
+
+// ============ TIME AGO ============
+function timeAgo(d){
+  const s=(Date.now()-new Date(d))/1000;
+  if(s<60)return 'Just now';
+  if(s<3600)return Math.floor(s/60)+'m ago';
+  if(s<86400)return Math.floor(s/3600)+'h ago';
+  return Math.floor(s/86400)+'d ago';
+}
+
+// ============ REAL FEED FROM SUPABASE ============
+async function loadRealFeed(){
+  try{
+    const {data,error}=await sb.from('posts')
+      .select('*, profiles(full_name,avatar_url,username,role,skill)')
+      .order('created_at',{ascending:false})
+      .limit(50);
+    if(error){console.error('feed error:',error);return;}
+    if(!data||data.length===0){
+      document.getElementById('feed-list').innerHTML='<div class="empty-s"><div style="font-size:32px;margin-bottom:8px;">📝</div>No posts yet. Be the first to share!</div>';
+      return;
+    }
+    posts=data.map(p=>{
+      const name=p.profiles?.full_name||p.profiles?.username||'User';
+      const ini=name.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
+      const colors=['linear-gradient(135deg,#6c63ff,#a78bfa)','linear-gradient(135deg,#f85149,#d29922)','linear-gradient(135deg,#3fb950,#00c6ff)','linear-gradient(135deg,#d29922,#0072ff)'];
+      const grad=colors[ini.charCodeAt(0)%colors.length];
+      return{id:p.id,dbId:p.id,author:name,ini,grad,avatarUrl:p.profiles?.avatar_url||'',realId:p.user_id,role:p.profiles?.skill||p.profiles?.role||'Member',time:timeAgo(p.created_at),body:p.content,likes:p.likes||0,comments:0,liked:false};
+    });
+    myPosts=posts.filter(p=>p.realId===user.id);
+    posts=posts.filter(p=>p.realId!==user.id);
+    renderPosts();
+  }catch(e){console.error('loadRealFeed:',e);}
+}
+
+// ============ COMMENTS ============
+let openComments=new Set();
+let commentsCache={};
+
+async function toggleComments(postId){
+  if(openComments.has(postId)){
+    openComments.delete(postId);
+    const c=document.getElementById('comments-'+postId);
+    if(c)c.innerHTML='';
+  }else{
+    openComments.add(postId);
+    await loadComments(postId);
+  }
+}
+
+async function loadComments(postId){
+  try{
+    const {data}=await sb.from('comments')
+      .select('*,profiles(full_name,avatar_url,username)')
+      .eq('post_id',postId)
+      .order('created_at',{ascending:true});
+    commentsCache[postId]=data||[];
+    renderComments(postId);
+  }catch(e){console.error('loadComments:',e);}
+}
+
+function renderComments(postId){
+  const container=document.getElementById('comments-'+postId);
+  if(!container)return;
+  const comments=commentsCache[postId]||[];
+  const myAv=user.avatarUrl?`background-image:url(${user.avatarUrl});background-size:cover;background-position:center;`:`background:linear-gradient(135deg,#6c63ff,#a78bfa);`;
+  container.innerHTML=`<div class="comments-section">
+    ${comments.map(c=>{
+      const ini=(c.profiles?.full_name||'U').split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
+      const avStyle=c.profiles?.avatar_url?`background-image:url(${c.profiles.avatar_url});background-size:cover;background-position:center;`:`background:linear-gradient(135deg,#6c63ff,#a78bfa);`;
+      return`<div class="comment-item"><div class="av sm" style="${avStyle}">${c.profiles?.avatar_url?'':ini}</div><div class="comment-bubble"><div class="comment-author">${c.profiles?.full_name||'User'}</div><div class="comment-text">${c.content}</div><div class="comment-time">${timeAgo(c.created_at)}</div></div></div>`;
+    }).join('')}
+    <div class="comment-input-row">
+      <div class="av sm" style="${myAv}">${user.avatarUrl?'':user.ini}</div>
+      <input class="comment-input" id="ci-${postId}" placeholder="Write a comment..." onkeydown="if(event.key==='Enter')addComment('${postId}')"/>
+      <button class="comment-send" onclick="addComment('${postId}')">➤</button>
+    </div>
+  </div>`;
+}
+
+async function addComment(postId){
+  const inp=document.getElementById('ci-'+postId);
+  const text=inp?.value.trim();
+  if(!text){return;}
+  if(!user.id){alert('Please log in to comment.');return;}
+  inp.value='';
+  try{
+    const {data,error}=await sb.from('comments').insert({post_id:postId,user_id:user.id,content:text}).select('*,profiles(full_name,avatar_url,username)').single();
+    if(error)throw error;
+    if(!commentsCache[postId])commentsCache[postId]=[];
+    commentsCache[postId].push(data);
+    renderComments(postId);
+    const cc=document.getElementById('cc-'+postId);
+    if(cc)cc.textContent=parseInt(cc.textContent||0)+1;
+  }catch(e){console.error('addComment:',e);alert('Failed to post comment: '+e.message);}
+}
+
+// ============ SHARE ============
+let currentSharePost=null;
+function openShareModal(postId,postBody){
+  currentSharePost={id:postId,body:postBody};
+  document.getElementById('share-content').textContent=postBody;
+  document.getElementById('share-link-copy').style.display='none';
+  document.getElementById('share-modal').classList.add('active');
+}
+
+function shareVia(platform){
+  const text=currentSharePost?.body||'';
+  const url=window.location.href;
+  const enc=encodeURIComponent;
+  if(platform==='copy'){
+    navigator.clipboard.writeText(url).then(()=>{
+      document.getElementById('share-link-input').value=url;
+      document.getElementById('share-link-copy').style.display='block';
+    });
+  }else if(platform==='twitter'){
+    window.open('https://twitter.com/intent/tweet?text='+enc(text)+'&url='+enc(url),'_blank');
+    document.getElementById('share-modal').classList.remove('active');
+  }else if(platform==='whatsapp'){
+    window.open('https://wa.me/?text='+enc(text+' '+url),'_blank');
+    document.getElementById('share-modal').classList.remove('active');
+  }else if(platform==='linkedin'){
+    window.open('https://www.linkedin.com/sharing/share-offsite/?url='+enc(url),'_blank');
+    document.getElementById('share-modal').classList.remove('active');
+  }
+}
+
+// ============ REPOST ============
+let currentRepostPost=null;
+function openRepostModal(postId,postBody,postAuthor){
+  currentRepostPost={id:postId,body:postBody,author:postAuthor};
+  document.getElementById('repost-preview').innerHTML='<strong>'+postAuthor+':</strong> '+postBody;
+  document.getElementById('repost-text').value='';
+  document.getElementById('repost-modal').classList.add('active');
+}
+
+async function doRepost(){
+  if(!currentRepostPost)return;
+  const comment=document.getElementById('repost-text').value.trim();
+  const repostContent=(comment?comment+'\n\n':'')+'🔁 Repost from '+currentRepostPost.author+':\n"'+currentRepostPost.body+'"';
+  document.getElementById('repost-modal').classList.remove('active');
+  document.getElementById('c-tx').value=repostContent;
+  await submitPost();
+  showToast('Reposted! ✓');
+}
+
+// ============ PORTFOLIO ============
+let portfolioItems=[];
+let selectedEmoji='🎨';
+
+function openPortfolioModal(){
+  document.getElementById('port-title').value='';
+  document.getElementById('port-desc').value='';
+  document.getElementById('port-link').value='';
+  selectedEmoji='🎨';
+  document.querySelectorAll('#emoji-picker span').forEach(s=>s.style.borderColor='transparent');
+  if(document.querySelector('#emoji-picker span'))document.querySelector('#emoji-picker span').style.borderColor='var(--accent)';
+  document.getElementById('portfolio-modal').classList.add('active');
+}
+
+function selectEmoji(el){
+  document.querySelectorAll('#emoji-picker span').forEach(s=>s.style.borderColor='transparent');
+  el.style.borderColor='var(--accent)';
+  selectedEmoji=el.dataset.emoji;
+}
+
+async function savePortfolioItem(){
+  const title=document.getElementById('port-title').value.trim();
+  const desc=document.getElementById('port-desc').value.trim();
+  const link=document.getElementById('port-link').value.trim();
+  if(!title){alert('Please enter a title');return;}
+  portfolioItems.push({emoji:selectedEmoji,title,desc,link,id:Date.now()});
+  renderPortfolio();
+  document.getElementById('portfolio-modal').classList.remove('active');
+  showToast('Portfolio item added! ✓');
+  if(user.id){
+    try{await sb.from('profiles').update({portfolio:JSON.stringify(portfolioItems)}).eq('id',user.id);}catch(e){console.error(e);}
+  }
+}
+
+function renderPortfolio(){
+  const grid=document.getElementById('portfolio-grid');
+  if(!grid)return;
+  if(portfolioItems.length===0){grid.innerHTML='<div class="empty-s" style="grid-column:1/-1;padding:20px;"><div style="font-size:24px;margin-bottom:6px;">🖼️</div>Add your work samples</div>';return;}
+  grid.innerHTML=portfolioItems.map((item,i)=>`<div class="port-item" style="position:relative;flex-direction:column;"><div class="pi-emoji">${item.emoji}</div><div style="font-size:12px;font-weight:600;">${item.title}</div>${item.link?`<a href="${item.link}" target="_blank" style="font-size:10px;color:var(--accent);margin-top:3px;">View →</a>`:''}<button onclick="removePortfolioItem(${i})" style="position:absolute;top:4px;right:4px;background:var(--bg4);border:none;border-radius:50%;width:18px;height:18px;cursor:pointer;color:var(--text3);font-size:10px;">✕</button></div>`).join('');
+}
+
+async function removePortfolioItem(idx){
+  portfolioItems.splice(idx,1);
+  renderPortfolio();
+  if(user.id){try{await sb.from('profiles').update({portfolio:JSON.stringify(portfolioItems)}).eq('id',user.id);}catch(e){}}
+}
+
+async function loadPortfolio(){
+  if(!user.id)return;
+  try{
+    const {data}=await sb.from('profiles').select('portfolio').eq('id',user.id).single();
+    if(data&&data.portfolio){portfolioItems=JSON.parse(data.portfolio)||[];renderPortfolio();}
+  }catch(e){console.error('loadPortfolio:',e);}
+}
+
+// ============ REAL USERS ============
+let allUsers=[];
+let myConnections=new Set();
+let myFollowing=new Set();
+
+async function loadRealUsers(){
+  try{
+    const {data,error}=await sb.from('profiles').select('*');
+    if(error||!data)return;
+    allUsers=data.filter(p=>p.id!==user.id);
+    renderExplore(allUsers);
+    renderSuggestedPeople(allUsers);
+    await loadMyConnections();
+  }catch(e){console.error('loadRealUsers:',e);}
+}
+
+function renderExplore(users){
+  const grid=document.getElementById('explore-grid');
+  if(!grid)return;
+  if(!users||users.length===0){grid.innerHTML='<div class="empty-s" style="grid-column:1/-1;"><div style="font-size:32px;margin-bottom:8px;">👥</div>No users yet. Invite friends!</div>';return;}
+  grid.innerHTML=users.map(p=>{
+    const name=p.full_name||p.username||'User';
+    const ini=name.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
+    const colors=['linear-gradient(135deg,#6c63ff,#a78bfa)','linear-gradient(135deg,#f85149,#d29922)','linear-gradient(135deg,#3fb950,#00c6ff)','linear-gradient(135deg,#d29922,#0072ff)'];
+    const grad=colors[ini.charCodeAt(0)%colors.length];
+    const avStyle=p.avatar_url?`background-image:url(${p.avatar_url});background-size:cover;background-position:center;`:`background:${grad};`;
+    const isConnected=myConnections.has(p.id);
+    const isClient=p.role==='client';
+    return`<div class="ecard" onclick="viewRealProfile('${p.id}')">
+      <div class="av lg" style="margin:0 auto 9px;${avStyle}">${p.avatar_url?'':ini}</div>
+      <div style="font-weight:700;font-size:13px;">${name}</div>
+      <div style="font-size:11px;color:var(--text3);margin:3px 0;">${p.skill||p.role||'Member'}${p.location?' · '+p.location:''}</div>
+      ${!isClient&&p.rate?`<div style="font-size:12px;color:var(--accent);margin-bottom:9px;">$${p.rate}/hr</div>`:'<div style="margin-bottom:9px;"></div>'}
+      ${isClient
+        ?`<button class="btn-follow-out" style="width:100%;font-size:12px;padding:8px;" onclick="event.stopPropagation();toggleFollowUser('${p.id}',this)">${myFollowing.has(p.id)?'✓ Following':'Follow'}</button>`
+        :`<button class="btn-connect" style="width:100%;font-size:12px;padding:8px;${isConnected?'background:transparent;border:1.5px solid var(--green);color:var(--green);':''}" onclick="event.stopPropagation();toggleConnectUser('${p.id}',this)">${isConnected?'✓ Connected':'Connect'}</button>`
+      }
+    </div>`;
+  }).join('');
+}
+
+function renderSuggestedPeople(users){
+  const list=document.getElementById('suggest-list');
+  if(!list)return;
+  const others=users.filter(p=>!myConnections.has(p.id)).slice(0,3);
+  if(others.length===0){list.innerHTML='<div style="color:var(--text3);font-size:13px;text-align:center;padding:8px;">You're connected with everyone!</div>';return;}
+  list.innerHTML=others.map(p=>{
+    const name=p.full_name||p.username||'User';
+    const ini=name.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
+    const colors=['linear-gradient(135deg,#6c63ff,#a78bfa)','linear-gradient(135deg,#f85149,#d29922)','linear-gradient(135deg,#3fb950,#00c6ff)'];
+    const grad=colors[ini.charCodeAt(0)%colors.length];
+    const avStyle=p.avatar_url?`background-image:url(${p.avatar_url});background-size:cover;background-position:center;`:`background:${grad};`;
+    return`<div class="sug"><div class="av sm" style="${avStyle};cursor:pointer;" onclick="viewRealProfile('${p.id}')">${p.avatar_url?'':ini}</div><div class="si" style="flex:1;min-width:0;"><div class="sn" onclick="viewRealProfile('${p.id}')">${name}</div><div class="sr">${p.skill||p.role||'Member'}</div></div><button class="bcon" onclick="toggleConnectUser('${p.id}',this)">${p.role==='client'?'Follow':'Connect'}</button></div>`;
+  }).join('');
+}
+
+async function loadMyConnections(){
+  try{
+    const {data}=await sb.from('connections').select('*').or(`follower_id.eq.${user.id},following_id.eq.${user.id}`);
+    if(!data)return;
+    myConnections=new Set();myFollowing=new Set();
+    data.forEach(c=>{
+      if(c.type==='connect'&&c.status==='accepted'){myConnections.add(c.follower_id===user.id?c.following_id:c.follower_id);}
+      if(c.type==='follow'&&c.follower_id===user.id)myFollowing.add(c.following_id);
+    });
+    document.getElementById('my-connections').textContent=myConnections.size;
+    document.getElementById('my-followers').textContent=data.filter(c=>c.following_id===user.id).length;
+    renderNetworkList();
+    renderExplore(allUsers);
+  }catch(e){console.error('loadMyConnections:',e);}
+}
+
+function renderNetworkList(){
+  const list=document.getElementById('network-list');
+  if(!list)return;
+  const connected=allUsers.filter(p=>myConnections.has(p.id));
+  if(connected.length===0){list.innerHTML='<div class="empty-s" style="grid-column:1/-1;"><div style="font-size:32px;margin-bottom:8px;">🌐</div>No connections yet.</div>';return;}
+  list.innerHTML=connected.map(p=>{
+    const name=p.full_name||p.username||'User';
+    const ini=name.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
+    const avStyle=p.avatar_url?`background-image:url(${p.avatar_url});background-size:cover;background-position:center;`:`background:linear-gradient(135deg,#6c63ff,#a78bfa);`;
+    return`<div class="ecard" onclick="viewRealProfile('${p.id}')"><div class="av lg" style="margin:0 auto 9px;${avStyle}">${p.avatar_url?'':ini}</div><div style="font-weight:700;font-size:13px;">${name}</div><div style="font-size:11px;color:var(--text3);margin:3px 0 9px;">${p.skill||p.role||'Member'}</div><button class="bcon connected" style="width:100%;justify-content:center;">✓ Connected</button></div>`;
+  }).join('');
+}
+
+async function toggleConnectUser(profileId,btn){
+  if(!user.id){alert('Please log in first.');return;}
+  const isConnected=myConnections.has(profileId);
+  btn.textContent=isConnected?'Connect':'✓ Connected';
+  btn.style.cssText=isConnected?'width:100%;font-size:12px;padding:8px;':'background:transparent;border:1.5px solid var(--green);color:var(--green);width:100%;font-size:12px;padding:8px;border-radius:20px;cursor:pointer;';
+  try{
+    if(isConnected){await sb.from('connections').delete().match({follower_id:user.id,following_id:profileId});myConnections.delete(profileId);}
+    else{await sb.from('connections').upsert({follower_id:user.id,following_id:profileId,type:'connect',status:'accepted'});myConnections.add(profileId);}
+    document.getElementById('my-connections').textContent=myConnections.size;
+    renderNetworkList();renderSuggestedPeople(allUsers);
+  }catch(e){console.error('connect:',e);}
+}
+
+async function toggleFollowUser(profileId,btn){
+  if(!user.id){alert('Please log in first.');return;}
+  const isFollowing=myFollowing.has(profileId);
+  btn.textContent=isFollowing?'Follow':'✓ Following';
+  try{
+    if(isFollowing){await sb.from('connections').delete().match({follower_id:user.id,following_id:profileId,type:'follow'});myFollowing.delete(profileId);}
+    else{await sb.from('connections').upsert({follower_id:user.id,following_id:profileId,type:'follow',status:'accepted'});myFollowing.add(profileId);}
+  }catch(e){console.error('follow:',e);}
+}
+
+async function viewRealProfile(profileId){
+  const p=allUsers.find(u=>u.id===profileId);
+  if(!p){return;}
+  const name=p.full_name||p.username||'User';
+  const ini=name.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
+  const colors=['linear-gradient(135deg,#6c63ff,#a78bfa)','linear-gradient(135deg,#f85149,#d29922)','linear-gradient(135deg,#3fb950,#00c6ff)','linear-gradient(135deg,#d29922,#0072ff)'];
+  const grad=colors[ini.charCodeAt(0)%colors.length];
+  const avStyle=p.avatar_url?`background-image:url(${p.avatar_url});background-size:cover;background-position:center;`:`background:${grad};`;
+  const isConnected=myConnections.has(profileId);
+  const isClient=p.role==='client';
+  document.getElementById('pubprof-content').innerHTML=`
+    <div class="ppcov"></div>
+    <div class="ppcard">
+      <div class="ppav-wrap">
+        <div class="av xl" style="${avStyle}">${p.avatar_url?'':ini}</div>
+        <div class="ppactions">
+          ${isClient
+            ?`<button class="btn-follow-out" onclick="toggleFollowUser('${p.id}',this)">${myFollowing.has(p.id)?'✓ Following':'Follow'}</button>`
+            :`<button class="btn-connect ${isConnected?'connected':''}" onclick="toggleConnectUser('${p.id}',this)">${isConnected?'✓ Connected':'Connect'}</button>
+               <button class="btn-follow-out" onclick="toggleFollowUser('${p.id}',this)">${myFollowing.has(p.id)?'✓ Following':'Follow'}</button>`
+          }
+          <button class="btn-msg" onclick="startDM('${p.id}','${name}','${ini}','${grad}')">Message</button>
+        </div>
+      </div>
+      <div class="ppname">${name}</div>
+      <div class="pphandle">@${p.username||'user'} · <span style="color:${isClient?'var(--green)':'var(--accent)'};">${isClient?'Client':'Freelancer'}</span>${p.location?' · '+p.location:''}</div>
+      ${!isClient&&p.rate?`<div style="margin:8px 0;"><span class="rate-badge">💰 $${p.rate}/hr</span></div>`:''}
+      ${isClient&&p.company?`<div style="margin:8px 0;"><span class="rate-badge" style="color:var(--green);">🏢 ${p.company}</span></div>`:''}
+      <div class="ppbio">${p.bio||'No bio yet.'}</div>
+      <div class="ppstats">
+        <div class="pst"><div class="num">0</div><div class="lbl">Posts</div></div>
+        <div class="pst"><div class="num">0</div><div class="lbl">Connections</div></div>
+        <div class="pst"><div class="num">0</div><div class="lbl">Followers</div></div>
+      </div>
+    </div>
+    <div id="pub-posts-${p.id}" class="sec-card"><div class="sec-title">Posts</div><div style="color:var(--text3);font-size:13px;">Loading...</div></div>`;
+  nav('pubprof',null);
+  document.getElementById('tb-t').textContent=name;
+  loadUserPosts(p.id);
+}
+
+async function loadUserPosts(userId){
+  try{
+    const {data}=await sb.from('posts').select('*').eq('user_id',userId).order('created_at',{ascending:false});
+    const container=document.getElementById('pub-posts-'+userId);
+    if(!container)return;
+    if(!data||data.length===0){container.innerHTML='<div class="sec-card"><div class="sec-title">Posts</div><div style="color:var(--text3);font-size:13px;">No posts yet.</div></div>';return;}
+    container.innerHTML=`<div class="sec-card"><div class="sec-title">Posts</div>${data.map(p=>`<div class="pc"><div class="pb">${p.content}</div><div style="font-size:12px;color:var(--text3);margin-top:6px;">${timeAgo(p.created_at)}</div></div>`).join('')}</div>`;
+  }catch(e){console.error('loadUserPosts:',e);}
+}
+
+function startDM(profileId,name,ini,grad){
+  nav('messages',null);
+  const dmList=document.querySelector('.dm-list');
+  if(dmList){
+    let existing=dmList.querySelector(`[data-uid="${profileId}"]`);
+    if(!existing){
+      const div=document.createElement('div');
+      div.className='dmi';div.setAttribute('data-uid',profileId);
+      div.innerHTML=`<div class="av sm" style="background:${grad};">${ini}</div><div style="flex:1;min-width:0;"><div style="display:flex;justify-content:space-between;"><span class="dn">${name}</span><span class="dt">now</span></div><div class="dp">Start a conversation...</div></div>`;
+      div.onclick=()=>selChat(name,ini,grad,'Online',div);
+      dmList.prepend(div);existing=div;
+    }
+    selChat(name,ini,grad,'Online',existing);
+  }
+}
+
+// ============ REAL SEARCH ============
+async function doSearch(q){
+  if(!q||q.length<2)return;
+  try{
+    const {data}=await sb.from('profiles').select('*').or(`full_name.ilike.%${q}%,username.ilike.%${q}%,skill.ilike.%${q}%`);
+    if(data&&data.length>0){renderExplore(data);nav('explore',null);document.getElementById('tb-t').textContent='Search: '+q;}
+    else{document.getElementById('explore-grid').innerHTML=`<div class="empty-s" style="grid-column:1/-1;"><div style="font-size:32px;margin-bottom:8px;">🔍</div>No results for "${q}"</div>`;nav('explore',null);}
+  }catch(e){console.error('search:',e);}
+}
+
 </script>
 
 <!-- EDIT PROFILE MODAL -->
