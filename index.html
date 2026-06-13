@@ -1646,7 +1646,7 @@ function renderSuggestedPeople(users){
   const list=document.getElementById('suggest-list');
   if(!list)return;
   const others=users.filter(p=>!myConnections.has(p.id)).slice(0,3);
-  if(others.length===0){list.innerHTML='<div style="color:var(--text3);font-size:13px;text-align:center;padding:8px;">You're connected with everyone!</div>';return;}
+  if(others.length===0){list.innerHTML='<div style="color:var(--text3);font-size:13px;text-align:center;padding:8px;">You are connected with everyone!</div>';return;}
   list.innerHTML=others.map(p=>{
     const name=p.full_name||p.username||'User';
     const ini=name.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
