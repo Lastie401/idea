@@ -16,6 +16,11 @@
   --fh:'Syne',sans-serif;--fb:'DM Sans',sans-serif;
   --r:12px;--rs:8px;--rxs:6px;
 }
+body.light-mode{
+  --bg:#f0f2f5;--bg2:#ffffff;--bg3:#f5f6fa;--bg4:#e8eaf0;
+  --border:#dde1ea;--border2:#c5cad8;
+  --text:#0d0a24;--text2:#4a5568;--text3:#718096;
+}
 body{background:var(--bg);color:var(--text);font-family:var(--fb);font-size:14px;height:100vh;overflow:hidden;}
 canvas#stars{position:fixed;inset:0;z-index:0;pointer-events:none;}
 .ascreen{position:fixed;inset:0;z-index:2;display:none;align-items:center;justify-content:center;flex-direction:column;}
@@ -517,7 +522,12 @@ canvas#stars{position:fixed;inset:0;z-index:0;pointer-events:none;}
           </div>
           <div style="display:flex;flex-wrap:wrap;gap:6px;" id="mp-skills"><span class="stag">UI Design</span><span class="stag">React</span><span class="stag">Figma</span><span class="stag">CSS</span><span class="stag">Branding</span></div>
         </div>
-        <div class="sec-card"><div class="sec-title">Portfolio <button class="bsm" style="font-size:11px;">+ Add</button></div><div class="port-grid"><div class="port-item"><div class="pi-emoji">🎨</div><div>Brand Identity</div></div><div class="port-item"><div class="pi-emoji">📱</div><div>Mobile App UI</div></div><div class="port-item"><div class="pi-emoji">🌐</div><div>Web Design</div></div></div></div>
+        <div class="sec-card" id="portfolio-section">
+          <div class="sec-title">Portfolio <button class="bsm" style="font-size:11px;" onclick="openPortfolioModal()">+ Add</button></div>
+          <div class="port-grid" id="portfolio-grid">
+            <div class="empty-s" style="grid-column:1/-1;padding:20px;"><div style="font-size:24px;margin-bottom:6px;">🖼️</div>Add your work samples</div>
+          </div>
+        </div>
         <div class="tabs" style="margin-bottom:12px;"><button class="tab on">Posts</button><button class="tab">Activity</button><button class="tab">Reviews</button></div>
         <div id="mp-posts"><div class="empty-s"><div style="font-size:32px;margin-bottom:8px;">✍️</div>No posts yet. Share something!</div></div>
       </div>
@@ -601,11 +611,72 @@ canvas#stars{position:fixed;inset:0;z-index:0;pointer-events:none;}
         <div id="s-rate-field" class="field"><label>Hourly Rate (USD)</label><input type="number" id="s-rate" value="25"/></div>
         <button class="bfull" style="width:auto;padding:9px 20px;font-size:13px;" onclick="saveSettings()">Save Changes</button>
       </div>
+      <div class="settings-card"><div class="stitle">Appearance</div>
+        <div class="trow">
+          <div>
+            <div style="font-size:13px;font-weight:600;">Theme</div>
+            <div style="font-size:12px;color:var(--text3);margin-top:2px;">Choose your preferred look</div>
+          </div>
+          <div style="display:flex;gap:8px;">
+            <button id="theme-dark" onclick="setTheme('dark')" style="padding:7px 16px;border-radius:20px;border:1.5px solid var(--accent);background:var(--accent);color:#fff;font-size:12px;cursor:pointer;font-family:var(--fb);font-weight:600;">🌙 Dark</button>
+            <button id="theme-light" onclick="setTheme('light')" style="padding:7px 16px;border-radius:20px;border:1.5px solid var(--border2);background:transparent;color:var(--text2);font-size:12px;cursor:pointer;font-family:var(--fb);font-weight:600;">☀️ Light</button>
+          </div>
+        </div>
+      </div>
       <div class="settings-card"><div class="stitle">Privacy</div>
         <div class="trow"><span style="font-size:13px;">Public profile (visible to everyone)</span><div class="tog on" onclick="this.classList.toggle('on');this.classList.toggle('off')"><div class="togk"></div></div></div>
         <div class="trow"><span style="font-size:13px;">Allow direct messages from anyone</span><div class="tog on" onclick="this.classList.toggle('on');this.classList.toggle('off')"><div class="togk"></div></div></div>
         <div class="trow"><span style="font-size:13px;">Email notifications</span><div class="tog off" onclick="this.classList.toggle('on');this.classList.toggle('off')"><div class="togk"></div></div></div>
         <div class="trow"><span style="font-size:13px;">Show online status</span><div class="tog on" onclick="this.classList.toggle('on');this.classList.toggle('off')"><div class="togk"></div></div></div>
+      </div>
+      <!-- VERIFIED BADGE PLANS -->
+      <div class="settings-card">
+        <div class="stitle">🔵 Get Verified Badge</div>
+        <p style="font-size:13px;color:var(--text2);margin-bottom:18px;">Get a blue verified badge on your profile and unlock premium features.</p>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;">
+          <!-- BASIC -->
+          <div style="background:var(--bg3);border:1.5px solid var(--border);border-radius:14px;padding:16px;text-align:center;">
+            <div style="font-size:11px;font-weight:700;letter-spacing:1px;color:var(--text3);text-transform:uppercase;margin-bottom:8px;">Basic</div>
+            <div style="font-size:28px;font-weight:800;font-family:var(--fh);margin-bottom:4px;">$5<span style="font-size:13px;font-weight:400;color:var(--text3);">/mo</span></div>
+            <div style="font-size:11px;color:var(--text2);margin-bottom:14px;">Individual verification</div>
+            <div style="display:flex;flex-direction:column;gap:7px;margin-bottom:14px;text-align:left;">
+              <div style="font-size:12px;display:flex;gap:6px;"><span style="color:var(--green);">✓</span>🔵 Verified badge</div>
+              <div style="font-size:12px;display:flex;gap:6px;"><span style="color:var(--green);">✓</span>Priority in search</div>
+              <div style="font-size:12px;display:flex;gap:6px;"><span style="color:var(--green);">✓</span>Unlimited DMs</div>
+              <div style="font-size:12px;display:flex;gap:6px;color:var(--text3);"><span>✗</span>Analytics</div>
+            </div>
+            <button onclick="alert('Payment coming soon!')" style="width:100%;padding:8px;border:1.5px solid var(--accent);border-radius:20px;background:transparent;color:var(--accent);font-size:12px;cursor:pointer;font-family:var(--fh);font-weight:700;">Get Basic</button>
+          </div>
+          <!-- PRO -->
+          <div style="background:linear-gradient(160deg,#1a1040,var(--bg3));border:1.5px solid var(--accent);border-radius:14px;padding:16px;text-align:center;position:relative;">
+            <div style="position:absolute;top:-10px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;font-size:10px;font-weight:700;padding:3px 12px;border-radius:20px;white-space:nowrap;">POPULAR</div>
+            <div style="font-size:11px;font-weight:700;letter-spacing:1px;color:var(--accent);text-transform:uppercase;margin-bottom:8px;">Pro</div>
+            <div style="font-size:28px;font-weight:800;font-family:var(--fh);margin-bottom:4px;">$12<span style="font-size:13px;font-weight:400;color:var(--text3);">/mo</span></div>
+            <div style="font-size:11px;color:var(--text2);margin-bottom:14px;">For serious creators</div>
+            <div style="display:flex;flex-direction:column;gap:7px;margin-bottom:14px;text-align:left;">
+              <div style="font-size:12px;display:flex;gap:6px;"><span style="color:var(--green);">✓</span>🔵 Verified badge</div>
+              <div style="font-size:12px;display:flex;gap:6px;"><span style="color:var(--green);">✓</span>Everything in Basic</div>
+              <div style="font-size:12px;display:flex;gap:6px;"><span style="color:var(--green);">✓</span>Profile analytics</div>
+              <div style="font-size:12px;display:flex;gap:6px;"><span style="color:var(--green);">✓</span>Featured in Explore</div>
+              <div style="font-size:12px;display:flex;gap:6px;"><span style="color:var(--green);">✓</span>Apply to jobs first</div>
+            </div>
+            <button onclick="alert('Payment coming soon!')" style="width:100%;padding:8px;border:none;border-radius:20px;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;font-size:12px;cursor:pointer;font-family:var(--fh);font-weight:700;">Get Pro →</button>
+          </div>
+          <!-- BUSINESS -->
+          <div style="background:var(--bg3);border:1.5px solid var(--border);border-radius:14px;padding:16px;text-align:center;">
+            <div style="font-size:11px;font-weight:700;letter-spacing:1px;color:var(--yellow);text-transform:uppercase;margin-bottom:8px;">Business</div>
+            <div style="font-size:28px;font-weight:800;font-family:var(--fh);margin-bottom:4px;">$29<span style="font-size:13px;font-weight:400;color:var(--text3);">/mo</span></div>
+            <div style="font-size:11px;color:var(--text2);margin-bottom:14px;">For teams & companies</div>
+            <div style="display:flex;flex-direction:column;gap:7px;margin-bottom:14px;text-align:left;">
+              <div style="font-size:12px;display:flex;gap:6px;"><span style="color:var(--green);">✓</span>🔵 Verified badge</div>
+              <div style="font-size:12px;display:flex;gap:6px;"><span style="color:var(--green);">✓</span>Everything in Pro</div>
+              <div style="font-size:12px;display:flex;gap:6px;"><span style="color:var(--green);">✓</span>Post unlimited jobs</div>
+              <div style="font-size:12px;display:flex;gap:6px;"><span style="color:var(--green);">✓</span>5 team members</div>
+              <div style="font-size:12px;display:flex;gap:6px;"><span style="color:var(--green);">✓</span>Priority support</div>
+            </div>
+            <button onclick="alert('Payment coming soon!')" style="width:100%;padding:8px;border:1.5px solid var(--yellow);border-radius:20px;background:transparent;color:var(--yellow);font-size:12px;cursor:pointer;font-family:var(--fh);font-weight:700;">Get Business</button>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -620,11 +691,7 @@ addEventListener('resize',rsz);rsz();draw();
 let user={name:'John Doe',role:'freelancer',email:'',ini:'JD',skill:'UI/UX Designer',rate:25};
 let selRole='freelancer';
 let myPosts=[];
-let posts=[
-  {id:1,author:'Amara Kone',ini:'AK',pid:'amara',grad:'linear-gradient(135deg,#f85149,#d29922)',role:'UI/UX Designer',time:'30m ago',body:'Just wrapped up a brand identity project for a Lagos fintech startup 🎨 Really proud of how it all came together. #UIDesign #Branding',likes:24,comments:7,liked:false},
-  {id:2,author:'Brian Mutua',ini:'BM',pid:'brian',grad:'linear-gradient(135deg,#3fb950,#00c6ff)',role:'Full-Stack Dev',time:'2h ago',body:'Hot take: clean code > clever code. I\'d rather read something obvious than spend 30 mins decoding a "smart" one-liner 👨‍💻 #WebDev',likes:51,comments:18,liked:false},
-  {id:3,author:'Sara Njoki',ini:'SN',pid:'sara',grad:'linear-gradient(135deg,#d29922,#0072ff)',role:'Client · TechStartup KE',time:'4h ago',body:'🚨 Hiring! Looking for a React developer for a 3-month remote contract. Great pay & team. DM me or check Jobs! 🚀 #Hiring',likes:12,comments:34,liked:false},
-];
+let posts=[];
 const profiles={
   amara:{name:'Amara Kone',ini:'AK',grad:'linear-gradient(135deg,#f85149,#d29922)',role:'freelancer',title:'UI/UX Designer',location:'Lagos, Nigeria',rate:35,bio:'Crafting beautiful, user-centered digital experiences. 5+ years designing for fintech, health, and e-commerce. Open to remote projects worldwide.',skills:['UI Design','UX Research','Figma','Prototyping','Design Systems'],connections:1240,followers:892,posts:67,portfolio:[{emoji:'🎨',label:'Brand Identity'},{emoji:'📱',label:'Fintech App'},{emoji:'🛒',label:'E-Commerce'}]},
   brian:{name:'Brian Mutua',ini:'BM',grad:'linear-gradient(135deg,#3fb950,#00c6ff)',role:'freelancer',title:'Full-Stack Developer',location:'Nairobi, Kenya',rate:45,bio:'Full-stack engineer with 6 years building scalable web apps. React, Node.js, PostgreSQL. Passionate about clean, maintainable code.',skills:['React','Node.js','TypeScript','PostgreSQL','AWS'],connections:830,followers:640,posts:44,portfolio:[{emoji:'⚙️',label:'SaaS Platform'},{emoji:'🛒',label:'E-Commerce'},{emoji:'📊',label:'Analytics Dashboard'}]},
@@ -1348,6 +1415,65 @@ function doSearch(q){if(!q)return;const pid=Object.keys(profiles).find(k=>profil
     <div class="modal-actions">
       <button class="btn-cancel" onclick="closeEditModal()">Cancel</button>
       <button class="btn-save" id="save-profile-btn" onclick="saveProfile()">Save Profile</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- PORTFOLIO MODAL -->
+<div class="modal-overlay" id="portfolio-modal">
+  <div class="modal" style="width:420px;">
+    <div class="modal-title">Add Portfolio Item <button class="modal-close" onclick="document.getElementById('portfolio-modal').classList.remove('active')">✕</button></div>
+    <div class="field"><label>Title</label><input type="text" id="port-title" placeholder="e.g. Brand Identity for Startup"/></div>
+    <div class="field"><label>Description</label><textarea id="port-desc" placeholder="Brief description of the project..." style="min-height:70px;resize:none;"></textarea></div>
+    <div class="field"><label>Category Emoji</label>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:6px;" id="emoji-picker">
+        <span onclick="selectEmoji(this)" style="font-size:24px;cursor:pointer;padding:6px;border-radius:8px;border:1.5px solid transparent;" data-emoji="🎨">🎨</span>
+        <span onclick="selectEmoji(this)" style="font-size:24px;cursor:pointer;padding:6px;border-radius:8px;border:1.5px solid transparent;" data-emoji="📱">📱</span>
+        <span onclick="selectEmoji(this)" style="font-size:24px;cursor:pointer;padding:6px;border-radius:8px;border:1.5px solid transparent;" data-emoji="🌐">🌐</span>
+        <span onclick="selectEmoji(this)" style="font-size:24px;cursor:pointer;padding:6px;border-radius:8px;border:1.5px solid transparent;" data-emoji="💻">💻</span>
+        <span onclick="selectEmoji(this)" style="font-size:24px;cursor:pointer;padding:6px;border-radius:8px;border:1.5px solid transparent;" data-emoji="📊">📊</span>
+        <span onclick="selectEmoji(this)" style="font-size:24px;cursor:pointer;padding:6px;border-radius:8px;border:1.5px solid transparent;" data-emoji="✍️">✍️</span>
+        <span onclick="selectEmoji(this)" style="font-size:24px;cursor:pointer;padding:6px;border-radius:8px;border:1.5px solid transparent;" data-emoji="📸">📸</span>
+        <span onclick="selectEmoji(this)" style="font-size:24px;cursor:pointer;padding:6px;border-radius:8px;border:1.5px solid transparent;" data-emoji="🎬">🎬</span>
+        <span onclick="selectEmoji(this)" style="font-size:24px;cursor:pointer;padding:6px;border-radius:8px;border:1.5px solid transparent;" data-emoji="🎵">🎵</span>
+      </div>
+    </div>
+    <div class="field"><label>Link (optional)</label><input type="text" id="port-link" placeholder="https://yourproject.com"/></div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="document.getElementById('portfolio-modal').classList.remove('active')">Cancel</button>
+      <button class="btn-save" onclick="savePortfolioItem()">Add to Portfolio</button>
+    </div>
+  </div>
+</div>
+
+<!-- IMAGE SHARE MODAL -->
+<div class="modal-overlay" id="share-modal">
+  <div class="modal" style="width:400px;">
+    <div class="modal-title">Share Post <button class="modal-close" onclick="document.getElementById('share-modal').classList.remove('active')">✕</button></div>
+    <div id="share-content" style="background:var(--bg3);border-radius:var(--rs);padding:14px;margin-bottom:16px;font-size:14px;color:var(--text2);"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+      <button onclick="shareVia('copy')" style="padding:11px;border:1.5px solid var(--border2);border-radius:var(--rs);background:transparent;color:var(--text2);font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;">📋 Copy Link</button>
+      <button onclick="shareVia('twitter')" style="padding:11px;border:1.5px solid var(--border2);border-radius:var(--rs);background:transparent;color:var(--text2);font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;">𝕏 Twitter</button>
+      <button onclick="shareVia('whatsapp')" style="padding:11px;border:1.5px solid var(--border2);border-radius:var(--rs);background:transparent;color:var(--text2);font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;">💬 WhatsApp</button>
+      <button onclick="shareVia('linkedin')" style="padding:11px;border:1.5px solid var(--border2);border-radius:var(--rs);background:transparent;color:var(--text2);font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;">in LinkedIn</button>
+    </div>
+    <div id="share-link-copy" style="margin-top:12px;display:none;">
+      <input type="text" id="share-link-input" readonly style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:var(--rs);padding:9px 12px;color:var(--text);font-size:12px;outline:none;"/>
+      <div style="color:var(--green);font-size:12px;margin-top:5px;text-align:center;">✓ Link copied to clipboard!</div>
+    </div>
+  </div>
+</div>
+
+<!-- REPOST MODAL -->
+<div class="modal-overlay" id="repost-modal">
+  <div class="modal" style="width:460px;">
+    <div class="modal-title">Repost <button class="modal-close" onclick="document.getElementById('repost-modal').classList.remove('active')">✕</button></div>
+    <div id="repost-preview" style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--rs);padding:12px;margin-bottom:14px;font-size:14px;color:var(--text2);line-height:1.6;"></div>
+    <div class="field"><label>Add your thoughts (optional)</label><textarea id="repost-text" placeholder="Add a comment..." style="min-height:70px;resize:none;"></textarea></div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="document.getElementById('repost-modal').classList.remove('active')">Cancel</button>
+      <button class="btn-save" onclick="doRepost()">Repost</button>
     </div>
   </div>
 </div>
