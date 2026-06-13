@@ -271,6 +271,21 @@ canvas#stars{position:fixed;inset:0;z-index:0;pointer-events:none;}
 .pass-strength-wrap{background:var(--border);border-radius:2px;overflow:hidden;margin-top:6px;}
 .strength-text{font-size:11px;margin-top:4px;}
 
+
+/* COMMENTS */
+.comments-section{margin-top:12px;border-top:1px solid var(--border);padding-top:12px;}
+.comment-item{display:flex;gap:8px;margin-bottom:10px;}
+.comment-bubble{flex:1;background:var(--bg3);border-radius:var(--rs);padding:9px 12px;}
+.comment-author{font-weight:600;font-size:13px;margin-bottom:3px;}
+.comment-text{font-size:13px;color:var(--text2);line-height:1.5;}
+.comment-time{font-size:11px;color:var(--text3);margin-top:4px;}
+.comment-input-row{display:flex;gap:8px;align-items:center;margin-top:10px;}
+.comment-input{flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:20px;padding:8px 14px;color:var(--text);font-size:13px;outline:none;font-family:var(--fb);transition:.2s;}
+.comment-input:focus{border-color:var(--accent);}
+.comment-send{width:32px;height:32px;background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:50%;cursor:pointer;color:#fff;font-size:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.show-comments-btn{color:var(--accent);font-size:12px;cursor:pointer;margin-top:4px;}
+.show-comments-btn:hover{text-decoration:underline;}
+
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
@@ -415,9 +430,7 @@ canvas#stars{position:fixed;inset:0;z-index:0;pointer-events:none;}
             <div class="tri"><div class="ttag">#HiringNow</div><div class="tcnt">310 posts</div></div>
           </div>
           <div class="wcard"><div class="wt">👥 People you may know</div>
-            <div class="sug" id="sug1"><div class="av sm" style="background:linear-gradient(135deg,#f85149,#d29922);cursor:pointer;" onclick="viewProfile('amara')">AK</div><div class="si" style="flex:1;min-width:0;"><div class="sn" onclick="viewProfile('amara')">Amara Kone</div><div class="sr">UI/UX Designer</div></div><button class="bcon" onclick="toggleConnect('sug1',this)">Connect</button></div>
-            <div class="sug" id="sug2"><div class="av sm" style="background:linear-gradient(135deg,#3fb950,#00c6ff);cursor:pointer;" onclick="viewProfile('brian')">BM</div><div class="si" style="flex:1;min-width:0;"><div class="sn" onclick="viewProfile('brian')">Brian Mutua</div><div class="sr">Full-Stack Dev</div></div><button class="bcon" onclick="toggleConnect('sug2',this)">Connect</button></div>
-            <div class="sug" id="sug3"><div class="av sm" style="background:linear-gradient(135deg,#d29922,#0072ff);cursor:pointer;" onclick="viewProfile('sara')">SN</div><div class="si" style="flex:1;min-width:0;"><div class="sn" onclick="viewProfile('sara')">Sara Njoki</div><div class="sr">Client · Startup</div></div><button class="bcon" onclick="toggleConnect('sug3',this)">Follow</button></div>
+            <div id="suggest-list"><div style="color:var(--text3);font-size:13px;">Loading...</div></div>
           </div>
         </div>
       </div>
@@ -426,21 +439,14 @@ canvas#stars{position:fixed;inset:0;z-index:0;pointer-events:none;}
     <div class="page" id="p-network">
       <div class="ph-row"><h2>My Network</h2><div class="tabs"><button class="tab on">Connections</button><button class="tab">Followers</button><button class="tab">Following</button></div></div>
       <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:13px;">
-        <div class="ecard" onclick="viewProfile('amara')"><div class="av lg" style="margin:0 auto 9px;background:linear-gradient(135deg,#f85149,#d29922);">AK</div><div style="font-weight:700;font-size:13px;">Amara Kone</div><div style="font-size:11px;color:var(--text3);margin:3px 0 9px;">UI/UX Designer · Lagos</div><button class="bcon connected" style="width:100%;justify-content:center;">✓ Connected</button></div>
-        <div class="ecard" onclick="viewProfile('brian')"><div class="av lg" style="margin:0 auto 9px;background:linear-gradient(135deg,#3fb950,#00c6ff);">BM</div><div style="font-weight:700;font-size:13px;">Brian Mutua</div><div style="font-size:11px;color:var(--text3);margin:3px 0 9px;">Full-Stack Dev · Nairobi</div><button class="bcon" style="width:100%;justify-content:center;">Connect</button></div>
-        <div class="ecard" onclick="viewProfile('sara')"><div class="av lg" style="margin:0 auto 9px;background:linear-gradient(135deg,#d29922,#0072ff);">SN</div><div style="font-weight:700;font-size:13px;">Sara Njoki</div><div style="font-size:11px;color:var(--text3);margin:3px 0 9px;">Client · TechStartup KE</div><button class="bcon" style="width:100%;justify-content:center;">Follow</button></div>
+
       </div>
     </div>
     <!-- EXPLORE -->
     <div class="page" id="p-explore">
       <div class="ph-row"><h2>Explore</h2><div class="tabs"><button class="tab on">People</button><button class="tab">Posts</button><button class="tab">Companies</button></div></div>
-      <div class="exp-grid">
-        <div class="ecard" onclick="viewProfile('amara')"><div class="av lg" style="margin:0 auto 9px;background:linear-gradient(135deg,#f85149,#d29922);">AK</div><div style="font-weight:700;font-size:13px;">Amara Kone</div><div style="font-size:11px;color:var(--text3);margin:3px 0;">UI/UX Designer · Lagos</div><div style="font-size:12px;color:var(--accent);margin-bottom:9px;">$35/hr</div><button class="btn-connect" style="width:100%;font-size:12px;padding:8px;">Connect</button></div>
-        <div class="ecard" onclick="viewProfile('brian')"><div class="av lg" style="margin:0 auto 9px;background:linear-gradient(135deg,#3fb950,#00c6ff);">BM</div><div style="font-weight:700;font-size:13px;">Brian Mutua</div><div style="font-size:11px;color:var(--text3);margin:3px 0;">Full-Stack Dev · Nairobi</div><div style="font-size:12px;color:var(--accent);margin-bottom:9px;">$45/hr</div><button class="btn-connect" style="width:100%;font-size:12px;padding:8px;">Connect</button></div>
-        <div class="ecard" onclick="viewProfile('nadia')"><div class="av lg" style="margin:0 auto 9px;background:linear-gradient(135deg,#8b5cf6,#3fb950);">NK</div><div style="font-weight:700;font-size:13px;">Nadia Kariuki</div><div style="font-size:11px;color:var(--text3);margin:3px 0;">Copywriter · Accra</div><div style="font-size:12px;color:var(--accent);margin-bottom:9px;">$20/hr</div><button class="btn-connect" style="width:100%;font-size:12px;padding:8px;">Connect</button></div>
-        <div class="ecard" onclick="viewProfile('sara')"><div class="av lg" style="margin:0 auto 9px;background:linear-gradient(135deg,#d29922,#0072ff);">SN</div><div style="font-weight:700;font-size:13px;">Sara Njoki</div><div style="font-size:11px;color:var(--text3);margin:3px 0;">Client · TechStartup KE</div><div style="font-size:12px;color:var(--green);margin-bottom:9px;">🏢 Company</div><button class="btn-follow-out" style="width:100%;font-size:12px;padding:8px;">Follow</button></div>
-        <div class="ecard"><div class="av lg" style="margin:0 auto 9px;background:linear-gradient(135deg,#0072ff,#00c6ff);">TM</div><div style="font-weight:700;font-size:13px;">Taiwo Mensah</div><div style="font-size:11px;color:var(--text3);margin:3px 0;">Brand Designer · Lagos</div><div style="font-size:12px;color:var(--accent);margin-bottom:9px;">$30/hr</div><button class="btn-connect" style="width:100%;font-size:12px;padding:8px;">Connect</button></div>
-        <div class="ecard"><div class="av lg" style="margin:0 auto 9px;background:linear-gradient(135deg,#f85149,#8b5cf6);">EO</div><div style="font-weight:700;font-size:13px;">Emeka Osei</div><div style="font-size:11px;color:var(--text3);margin:3px 0;">Motion Designer · Accra</div><div style="font-size:12px;color:var(--accent);margin-bottom:9px;">$40/hr</div><button class="btn-connect" style="width:100%;font-size:12px;padding:8px;">Connect</button></div>
+      <div class="exp-grid" id="explore-grid">
+        <div class="empty-s" style="grid-column:1/-1;"><div style="font-size:32px;margin-bottom:8px;">🔍</div>Loading people...</div>
       </div>
     </div>
     <!-- PUBLIC PROFILE -->
@@ -505,9 +511,9 @@ canvas#stars{position:fixed;inset:0;z-index:0;pointer-events:none;}
           <div style="font-size:14px;color:var(--text2);margin-bottom:11px;line-height:1.6;" id="mp-bio">UI/UX Designer & Frontend Developer based in Nairobi. Open to freelance projects 🚀</div>
           <div style="display:flex;gap:16px;margin-bottom:11px;">
             <div class="pst"><div class="num" id="mp-pcnt">0</div><div class="lbl">Posts</div></div>
-            <div class="pst"><div class="num">248</div><div class="lbl">Connections</div></div>
-            <div class="pst"><div class="num">134</div><div class="lbl">Followers</div></div>
-            <div class="pst"><div class="num">8</div><div class="lbl">Projects</div></div>
+            <div class="pst"><div class="num" id="my-connections">0</div><div class="lbl">Connections</div></div>
+            <div class="pst"><div class="num" id="my-followers">0</div><div class="lbl">Followers</div></div>
+            <div class="pst"><div class="num" id="my-projects">0</div><div class="lbl">Projects</div></div>
           </div>
           <div style="display:flex;flex-wrap:wrap;gap:6px;" id="mp-skills"><span class="stag">UI Design</span><span class="stag">React</span><span class="stag">Figma</span><span class="stag">CSS</span><span class="stag">Branding</span></div>
         </div>
