@@ -782,8 +782,51 @@ async function logout(){
   user={name:'',role:'freelancer',email:'',ini:'',skill:'',rate:25};
 }
 function nav(page,el){document.querySelectorAll('.ni').forEach(n=>n.classList.remove('on'));if(el)el.classList.add('on');document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.getElementById('p-'+page).classList.add('active');const t={feed:'Feed',network:'My Network',explore:'Explore',notifications:'Notifications',messages:'Messages',jobs:user.role==='client'?'Manage Jobs':'Browse Jobs',myprofile:'My Profile',pricing:'Pricing & Plans',settings:'Settings',pubprof:'Profile'};document.getElementById('tb-t').textContent=t[page]||page;}
-function renderPosts(){const all=[...myPosts,...posts];document.getElementById('feed-list').innerHTML=all.map(p=>`<div class="pc"><div class="ph"><div class="av sm" style="background:${p.grad||'linear-gradient(135deg,#1e90ff,#00b4ff)'};cursor:pointer;" onclick="viewProfile('${p.pid||''}')">${p.ini}</div><div style="flex:1;"><div class="pun" onclick="viewProfile('${p.pid||''}')">${p.author}</div><div class="prl">${p.role} · ${p.time}</div></div><div style="color:var(--text3);cursor:pointer;">···</div></div><div class="pb">${p.body}</div><div class="pa"><div class="pact ${p.liked?'lkd':''}" onclick="toggleLike(${p.id})">${p.liked?'❤️':'🤍'} <span>${p.likes}</span></div><div class="pact">💬 ${p.comments}</div><div class="pact">🔁 Repost</div><div class="pact">↗ Share</div></div></div>`).join('');document.getElementById('mp-posts').innerHTML=myPosts.length?myPosts.map(p=>`<div class="pc"><div class="pb">${p.body}</div><div style="font-size:12px;color:var(--text3);margin-top:6px;">${p.likes} likes · ${p.comments} comments</div></div>`).join(''):'<div class="empty-s"><div style="font-size:32px;margin-bottom:8px;">✍️</div>No posts yet!</div>';document.getElementById('mp-pcnt').textContent=myPosts.length;}
-function toggleLike(id){const p=[...posts,...myPosts].find(x=>x.id===id);if(!p)return;p.liked=!p.liked;p.likes+=p.liked?1:-1;renderPosts();}
+
+function renderPosts(){
+  const all=[...myPosts,...posts];
+  const feedEl=document.getElementById('feed-list');
+  if(!feedEl)return;
+  if(all.length===0){
+    feedEl.innerHTML='<div class="empty-s"><div style="font-size:32px;margin-bottom:8px;">📝</div>No posts yet. Be the first to share!</div>';
+  } else {
+    feedEl.innerHTML=all.map(p=>{
+      const avStyle=p.avatarUrl?`background-image:url(${p.avatarUrl});background-size:cover;background-position:center;`:`background:${p.grad||'linear-gradient(135deg,#6c63ff,#a78bfa)'};`;
+      const safeBody=(p.body||'').replace(/`/g,"'").replace(/"/g,"&quot;");
+      const safeAuthor=(p.author||'').replace(/`/g,"'");
+      return`<div class="pc">
+        <div class="ph">
+          <div class="av sm" style="${avStyle};cursor:pointer;" onclick="${p.realId&&p.realId!==user.id?`viewRealProfile('${p.realId}')`:"nav('myprofile',null)"}">${p.avatarUrl?'':p.ini}</div>
+          <div style="flex:1;"><div class="pun" onclick="${p.realId&&p.realId!==user.id?`viewRealProfile('${p.realId}')`:"nav('myprofile',null)"}">${p.author}</div><div class="prl">${p.role} · ${p.time}</div></div>
+          <div style="color:var(--text3);cursor:pointer;">···</div>
+        </div>
+        <div class="pb">${p.body}</div>
+        <div class="pa">
+          <div class="pact ${p.liked?'lkd':''}" onclick="toggleLike('${p.dbId||p.id}')">${p.liked?'❤️':'🤍'} <span>${p.likes}</span></div>
+          <div class="pact" onclick="toggleComments('${p.dbId||p.id}')">💬 <span id="cc-${p.dbId||p.id}">${p.comments}</span></div>
+          <div class="pact" onclick="openRepostModal('${p.dbId||p.id}',\`${safeBody}\`,'${safeAuthor}')">🔁 Repost</div>
+          <div class="pact" onclick="openShareModal('${p.dbId||p.id}',\`${safeBody}\`)">↗ Share</div>
+        </div>
+        <div id="comments-${p.dbId||p.id}"></div>
+      </div>`;
+    }).join('');
+  }
+  // Update profile posts
+  const mpPosts=document.getElementById('mp-posts');
+  if(mpPosts){
+    mpPosts.innerHTML=myPosts.length?myPosts.map(p=>`<div class="pc"><div class="pb">${p.body}</div><div style="font-size:12px;color:var(--text3);margin-top:6px;">${p.likes} likes · ${p.comments} comments · ${p.time}</div></div>`).join(''):'<div class="empty-s"><div style="font-size:32px;margin-bottom:8px;">✍️</div>No posts yet!</div>';
+  }
+  const mpPcnt=document.getElementById('mp-pcnt');
+  if(mpPcnt)mpPcnt.textContent=myPosts.length;
+}
+
+
+function toggleLike(id){
+  const p=[...posts,...myPosts].find(x=>x.id===id||x.dbId===id);
+  if(!p)return;
+  p.liked=!p.liked;p.likes+=p.liked?1:-1;renderPosts();
+}
+
 function submitPost(){const t=document.getElementById('c-tx').value.trim();if(!t)return;myPosts.unshift({id:Date.now(),author:user.name,ini:user.ini,pid:'me',grad:'linear-gradient(135deg,#1e90ff,#00b4ff)',role:user.role==='freelancer'?'Freelancer':'Client',time:'Just now',body:t,likes:0,comments:0,liked:false});document.getElementById('c-tx').value='';renderPosts();}
 function viewProfile(pid){if(!pid||pid==='me'){nav('myprofile',null);return;}const p=profiles[pid];if(!p){nav('myprofile',null);return;}let html='';if(p.role==='freelancer'){html=`<div class="ppcov"></div><div class="ppcard"><div class="ppav-wrap"><div class="av xl" style="background:${p.grad};">${p.ini}</div><div class="ppactions"><button class="btn-connect" onclick="this.textContent=this.textContent==='Connect'?'✓ Connected':'Connect';this.classList.toggle('connected')">Connect</button><button class="btn-follow-out" onclick="this.textContent=this.textContent==='Follow'?'✓ Following':'Follow'">Follow</button><button class="btn-msg" onclick="nav('messages',null)">Message</button></div></div><div class="ppname">${p.name}</div><div class="pphandle">@${p.name.toLowerCase().replace(/ /g,'')} · <span style="color:var(--accent);">Freelancer</span> · ${p.location}</div><div style="margin:8px 0;"><span class="rate-badge">💰 $${p.rate}/hr</span></div><div class="ppbio">${p.bio}</div><div class="ppstats"><div class="pst"><div class="num">${p.connections.toLocaleString()}</div><div class="lbl">Connections</div></div><div class="pst"><div class="num">${p.followers.toLocaleString()}</div><div class="lbl">Followers</div></div><div class="pst"><div class="num">${p.posts}</div><div class="lbl">Posts</div></div></div><div style="display:flex;flex-wrap:wrap;gap:6px;">${p.skills.map(s=>`<span class="stag">${s}</span>`).join('')}</div></div><div class="sec-card"><div class="sec-title">Portfolio</div><div class="port-grid">${p.portfolio.map(i=>`<div class="port-item"><div class="pi-emoji">${i.emoji}</div><div>${i.label}</div></div>`).join('')}</div></div>`;}else{html=`<div class="ppcov"></div><div class="ppcard"><div class="ppav-wrap"><div class="av xl" style="background:${p.grad};">${p.ini}</div><div class="ppactions"><button class="btn-follow-out" onclick="this.textContent=this.textContent==='Follow'?'✓ Following':'Follow'">Follow</button><button class="btn-msg" onclick="nav('messages',null)">Message</button></div></div><div class="ppname">${p.name}</div><div class="pphandle">@${p.name.toLowerCase().replace(/ /g,'')} · <span style="color:var(--green);">Client</span> · ${p.location}</div><div style="margin:8px 0;"><span class="rate-badge" style="color:var(--green);">🏢 ${p.company} · ${p.industry}</span></div><div class="ppbio">${p.bio}</div><div class="ppstats"><div class="pst"><div class="num">${p.followers.toLocaleString()}</div><div class="lbl">Followers</div></div><div class="pst"><div class="num">${p.following}</div><div class="lbl">Following</div></div><div class="pst"><div class="num">${p.jobs.length}</div><div class="lbl">Open Jobs</div></div></div></div><div class="sec-card"><div class="sec-title">Open Jobs</div>${p.jobs.map(j=>`<div class="job-open"><div class="jot">${j.title}</div><div class="jod">${p.company} · ${j.type}</div><div class="jof"><span class="jofbud">${j.budget}</span><span>${j.posted}</span></div></div>`).join('')}</div>`;}document.getElementById('pubprof-content').innerHTML=html;nav('pubprof',null);document.getElementById('tb-t').textContent=p.name;}
 function toggleConnect(rowId,btn){const connected=btn.classList.contains('connected');btn.classList.toggle('connected',!connected);btn.textContent=connected?'Connect':'✓ Connected';}
@@ -1341,7 +1384,7 @@ function showToast(msg){
   setTimeout(()=>{toast.style.opacity='0';},2500);
 }
 
-function doSearch(q){if(!q)return;const pid=Object.keys(profiles).find(k=>profiles[k].name.toLowerCase().includes(q.toLowerCase()));if(pid)viewProfile(pid);}
+// doSearch handled below
 
 
 // ============ THEME ============
@@ -1741,6 +1784,26 @@ async function doSearch(q){
     if(data&&data.length>0){renderExplore(data);nav('explore',null);document.getElementById('tb-t').textContent='Search: '+q;}
     else{document.getElementById('explore-grid').innerHTML=`<div class="empty-s" style="grid-column:1/-1;"><div style="font-size:32px;margin-bottom:8px;">🔍</div>No results for "${q}"</div>`;nav('explore',null);}
   }catch(e){console.error('search:',e);}
+}
+
+
+async function submitPost(){
+  const t=document.getElementById('c-tx').value.trim();
+  if(!t)return;
+  document.getElementById('c-tx').value='';
+  const localId=Date.now();
+  myPosts.unshift({id:localId,dbId:null,author:user.name,ini:user.ini,realId:user.id,grad:'linear-gradient(135deg,#6c63ff,#a78bfa)',role:user.role==='freelancer'?'Freelancer':'Client',time:'Just now',body:t,likes:0,comments:0,liked:false});
+  renderPosts();
+  if(user.id){
+    try{
+      const {data,error}=await sb.from('posts').insert({user_id:user.id,content:t,likes:0}).select().single();
+      if(!error&&data){
+        const p=myPosts.find(x=>x.id===localId);
+        if(p){p.dbId=data.id;p.id=data.id;}
+        renderPosts();
+      }
+    }catch(e){console.error('post save:',e);}
+  }
 }
 
 </script>
