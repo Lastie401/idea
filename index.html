@@ -298,7 +298,11 @@ canvas#stars{position:fixed;inset:0;z-index:0;pointer-events:none;}
 .sb-nav .ni{display:flex;align-items:center;gap:18px;padding:11px 16px;border-radius:30px;cursor:pointer;color:var(--text);font-size:16px;font-weight:500;transition:.15s;margin:0;font-family:var(--fb);}
 .sb-nav .ni:hover{background:var(--bg4);}
 .sb-nav .ni.on{font-weight:800;}
-.sb-nav .nic{font-size:23px;width:24px;text-align:center;flex-shrink:0;}
+.sb-nav .nic{font-size:23px;width:24px;height:24px;text-align:center;flex-shrink:0;display:flex;align-items:center;justify-content:center;}
+.sb-nav .nic svg{width:24px;height:24px;}
+.sb-menu-item .nic svg{width:18px;height:18px;}
+.sb-post-icon svg{width:20px;height:20px;}
+.sb-nav .ni.on .nic{color:var(--accent);}
 .sb-nav .nb{margin-left:auto;background:var(--accent);color:#fff;font-size:10px;padding:1px 6px;border-radius:10px;font-weight:700;}
 .sb-post-btn{margin:8px 16px;padding:14px;border:none;border-radius:30px;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;font-family:var(--fh);font-size:15px;font-weight:800;cursor:pointer;transition:.2s;display:flex;align-items:center;justify-content:center;gap:8px;}
 .sb-post-btn:hover{opacity:.9;}
@@ -452,17 +456,17 @@ canvas#stars{position:fixed;inset:0;z-index:0;pointer-events:none;}
     <div class="sb-collapse-btn" onclick="toggleSidebar()">‹</div>
     <div class="sb-logo"><svg viewBox="0 0 26 26" fill="none"><polygon points="13,1 25,7 25,19 13,25 1,19 1,7" fill="#061525"/><circle cx="13" cy="13" r="4" fill="url(#gs)"/><defs><radialGradient id="gs"><stop offset="0%" stop-color="#00b4ff"/><stop offset="100%" stop-color="#1e90ff"/></radialGradient></defs></svg><span>IDEAX</span></div>
     <nav class="sb-nav">
-      <div class="ni on" onclick="nav('feed',this)"><span class="nic">🏠</span><span>Feed</span></div>
-      <div class="ni" onclick="nav('explore',this)"><span class="nic">🔍</span><span>Explore</span></div>
-      <div class="ni" onclick="nav('notifications',this)"><span class="nic">🔔</span><span>Notifications</span><span class="nb">4</span></div>
-      <div class="ni" onclick="nav('messages',this)"><span class="nic">💬</span><span>Messages</span><span class="nb">2</span></div>
-      <div class="ni" onclick="nav('network',this)"><span class="nic">🌐</span><span>Network</span></div>
-      <div class="ni" onclick="nav('jobs',this)"><span class="nic">💼</span><span id="jlbl">Jobs</span></div>
-      <div class="ni" onclick="nav('myprofile',this)"><span class="nic">👤</span><span>Profile</span></div>
-      <div class="ni" onclick="nav('pricing',this)"><span class="nic">💎</span><span>Premium</span></div>
-      <div class="ni" onclick="nav('settings',this)"><span class="nic">⚙️</span><span>Settings</span></div>
+      <div class="ni on" onclick="nav('feed',this)"><span class="nic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></span><span>Feed</span></div>
+      <div class="ni" onclick="nav('explore',this)"><span class="nic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg></span><span>Explore</span></div>
+      <div class="ni" onclick="nav('notifications',this)"><span class="nic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg></span><span>Notifications</span><span class="nb">4</span></div>
+      <div class="ni" onclick="nav('messages',this)"><span class="nic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg></span><span>Messages</span><span class="nb">2</span></div>
+      <div class="ni" onclick="nav('network',this)"><span class="nic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></span><span>Network</span></div>
+      <div class="ni" onclick="nav('jobs',this)"><span class="nic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="7" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg></span><span id="jlbl">Jobs</span></div>
+      <div class="ni" onclick="nav('myprofile',this)"><span class="nic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span><span>Profile</span></div>
+      <div class="ni" onclick="nav('pricing',this)"><span class="nic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3.85 8.62a4 4 0 0 1 4.78-4.77 4 4 0 0 1 6.74 0 4 4 0 0 1 4.78 4.78 4 4 0 0 1 0 6.74 4 4 0 0 1-4.78 4.78 4 4 0 0 1-6.74 0 4 4 0 0 1-4.78-4.78 4 4 0 0 1 0-6.75Z"/><path d="m9 12 2 2 4-4"/></svg></span><span>Premium</span></div>
+      <div class="ni" onclick="nav('settings',this)"><span class="nic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg></span><span>Settings</span></div>
     </nav>
-    <button class="sb-post-btn" onclick="focusCompose()"><span class="sb-post-text">Post</span><span class="sb-post-icon">✏️</span></button>
+    <button class="sb-post-btn" onclick="focusCompose()"><span class="sb-post-text">Post</span><span class="sb-post-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg></span></button>
     <div class="sbfoot">
       <div class="sb-me" onclick="toggleUserMenu(event)">
         <div class="av" id="sb-av">JD</div>
@@ -473,10 +477,10 @@ canvas#stars{position:fixed;inset:0;z-index:0;pointer-events:none;}
         <div class="sb-dots">···</div>
       </div>
       <div class="sb-user-menu" id="sb-user-menu">
-        <div class="sb-menu-item" onclick="event.stopPropagation();nav('settings',null);closeUserMenu()"><span class="nic">⚙️</span> Settings</div>
-        <div class="sb-menu-item" onclick="event.stopPropagation();quickToggleTheme()"><span class="nic" id="theme-menu-icon">🌙</span> <span id="theme-menu-text">Dark mode</span></div>
+        <div class="sb-menu-item" onclick="event.stopPropagation();nav('settings',null);closeUserMenu()"><span class="nic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></span> Settings</div>
+        <div class="sb-menu-item" onclick="event.stopPropagation();quickToggleTheme()"><span class="nic" id="theme-menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg></span> <span id="theme-menu-text">Dark mode</span></div>
         <div class="sb-menu-divider"></div>
-        <div class="sb-menu-item" onclick="event.stopPropagation();logout()"><span class="nic">🚪</span> Log out</div>
+        <div class="sb-menu-item" onclick="event.stopPropagation();logout()"><span class="nic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></span> Log out</div>
       </div>
     </div>
   </div>
@@ -1989,8 +1993,8 @@ function quickToggleTheme(){
 function updateThemeMenuLabel(theme){
   const icon=document.getElementById('theme-menu-icon');
   const text=document.getElementById('theme-menu-text');
-  if(theme==='light'){ if(icon)icon.textContent='☀️'; if(text)text.textContent='Light mode'; }
-  else { if(icon)icon.textContent='🌙'; if(text)text.textContent='Dark mode'; }
+  if(theme==='light'){ if(icon)icon.innerHTML=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>`; if(text)text.textContent='Light mode'; }
+  else { if(icon)icon.innerHTML=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>`; if(text)text.textContent='Dark mode'; }
 }
 
 // ============ POST BUTTON -> focus compose ============
