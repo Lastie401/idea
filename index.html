@@ -291,6 +291,34 @@ canvas#stars{position:fixed;inset:0;z-index:0;pointer-events:none;}
 .show-comments-btn{color:var(--accent);font-size:12px;cursor:pointer;margin-top:4px;}
 .show-comments-btn:hover{text-decoration:underline;}
 
+
+/* COLLAPSIBLE SIDEBAR */
+.sb{transition:width .25s ease;position:relative;}
+.sb.collapsed{width:72px;}
+.sb.collapsed .uname,.sb.collapsed .ubadge,.sb.collapsed .nsec,.sb.collapsed .sb-logo span,
+.sb.collapsed .ni span:not(.nic),.sb.collapsed .nb,.sb.collapsed .bsm-text{display:none;}
+.sb.collapsed .ni{justify-content:center;padding:10px;margin:1px 8px;}
+.sb.collapsed .sb-me{justify-content:center;padding:11px 0;}
+.sb.collapsed .sb-logo{justify-content:center;padding:16px 0 12px;}
+.sb.collapsed .nic{font-size:19px;}
+.sb.collapsed .sbfoot .bsm{padding:8px;}
+.sb-collapse-btn{position:absolute;top:14px;right:-12px;width:24px;height:24px;border-radius:50%;background:var(--bg3);border:1px solid var(--border2);color:var(--text2);font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:10;transition:.2s;}
+.sb-collapse-btn:hover{background:var(--accent);color:#fff;border-color:var(--accent);}
+.sb.collapsed .sb-collapse-btn{transform:rotate(180deg);}
+
+/* X-STYLE FEED TABS */
+.feed-tabs{display:flex;border-bottom:1px solid var(--border);margin:-20px -20px 0;background:var(--bg2);position:sticky;top:-20px;z-index:5;}
+.feed-tab{flex:1;text-align:center;padding:14px 0;font-size:14px;font-weight:600;color:var(--text2);cursor:pointer;position:relative;transition:.2s;font-family:var(--fh);}
+.feed-tab:hover{background:var(--bg3);color:var(--text);}
+.feed-tab.active{color:var(--text);}
+.feed-tab.active::after{content:'';position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:56px;height:3px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:3px 3px 0 0;}
+.feed-content-wrap{padding-top:18px;}
+
+
+.sb.collapsed .bsm{display:flex;align-items:center;justify-content:center;}
+.sb.collapsed .bsm-text{display:none;}
+.sb.collapsed .bsm-icon-only{display:inline !important;}
+
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
@@ -397,21 +425,22 @@ canvas#stars{position:fixed;inset:0;z-index:0;pointer-events:none;}
 
 <!-- APP -->
 <div id="app">
-  <div class="sb">
+  <div class="sb" id="sidebar">
+    <div class="sb-collapse-btn" onclick="toggleSidebar()">‹</div>
     <div class="sb-logo"><svg viewBox="0 0 26 26" fill="none"><polygon points="13,1 25,7 25,19 13,25 1,19 1,7" fill="#061525"/><circle cx="13" cy="13" r="4" fill="url(#gs)"/><defs><radialGradient id="gs"><stop offset="0%" stop-color="#00b4ff"/><stop offset="100%" stop-color="#1e90ff"/></radialGradient></defs></svg><span>IDEAX</span></div>
     <div class="sb-me" onclick="nav('myprofile',null)"><div class="av" id="sb-av">JD</div><div><div class="uname" id="sb-nm">John Doe</div><span class="ubadge bf" id="sb-bg">Freelancer</span></div></div>
     <div class="nsec">Main</div>
-    <div class="ni on" onclick="nav('feed',this)"><span class="nic">🏠</span>Feed</div>
-    <div class="ni" onclick="nav('network',this)"><span class="nic">🌐</span>Network</div>
-    <div class="ni" onclick="nav('explore',this)"><span class="nic">🔍</span>Explore</div>
-    <div class="ni" onclick="nav('notifications',this)"><span class="nic">🔔</span>Notifications<span class="nb">4</span></div>
-    <div class="ni" onclick="nav('messages',this)"><span class="nic">💬</span>Messages<span class="nb">2</span></div>
+    <div class="ni on" onclick="nav('feed',this)"><span class="nic">🏠</span><span>Feed</span></div>
+    <div class="ni" onclick="nav('network',this)"><span class="nic">🌐</span><span>Network</span></div>
+    <div class="ni" onclick="nav('explore',this)"><span class="nic">🔍</span><span>Explore</span></div>
+    <div class="ni" onclick="nav('notifications',this)"><span class="nic">🔔</span><span>Notifications</span><span class="nb">4</span></div>
+    <div class="ni" onclick="nav('messages',this)"><span class="nic">💬</span><span>Messages</span><span class="nb">2</span></div>
     <div class="nsec">Work</div>
     <div class="ni" onclick="nav('jobs',this)"><span class="nic">💼</span><span id="jlbl">Browse Jobs</span></div>
-    <div class="ni" onclick="nav('myprofile',this)"><span class="nic">👤</span>My Profile</div>
-    <div class="ni" onclick="nav('pricing',this)"><span class="nic">💎</span>Pricing</div>
-    <div class="ni" onclick="nav('settings',this)"><span class="nic">⚙️</span>Settings</div>
-    <div class="sbfoot"><button class="bsm" style="width:100%;" onclick="logout()">← Log Out</button></div>
+    <div class="ni" onclick="nav('myprofile',this)"><span class="nic">👤</span><span>My Profile</span></div>
+    <div class="ni" onclick="nav('pricing',this)"><span class="nic">💎</span><span>Pricing</span></div>
+    <div class="ni" onclick="nav('settings',this)"><span class="nic">⚙️</span><span>Settings</span></div>
+    <div class="sbfoot"><button class="bsm" style="width:100%;" onclick="logout()"><span class="bsm-text">← Log Out</span><span style="display:none;" class="bsm-icon-only">⏻</span></button></div>
   </div>
   <div class="main">
     <div class="topbar">
@@ -421,6 +450,11 @@ canvas#stars{position:fixed;inset:0;z-index:0;pointer-events:none;}
     </div>
     <!-- FEED -->
     <div class="page active" id="p-feed">
+      <div class="feed-tabs">
+        <div class="feed-tab active" id="tab-foryou" onclick="switchFeedTab('foryou')">For You</div>
+        <div class="feed-tab" id="tab-following" onclick="switchFeedTab('following')">Following</div>
+      </div>
+      <div class="feed-content-wrap">
       <div class="feed-grid">
         <div>
           <div class="compose"><div class="crow"><div class="av sm" id="c-av">JD</div><textarea class="cta" id="c-tx" placeholder="Share an idea, insight, or opportunity..."></textarea></div><div class="cbot"><div style="display:flex;gap:5px;"><button class="icb">🖼️</button><button class="icb">🔗</button><button class="icb">🏷️</button></div><button class="postbtn" onclick="submitPost()">Post</button></div></div>
@@ -774,7 +808,63 @@ async function doLogin(){
     showAuthError('login',err.message==='Invalid login credentials'?'Wrong email or password. Try again.':err.message);
   }finally{btn.textContent='Log In';btn.disabled=false;}
 }
-function launch(){document.querySelectorAll('.ascreen').forEach(s=>s.classList.remove('active'));document.getElementById('app').classList.add('active');['sb-av','tb-av','c-av','mp-av','my-av'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=user.ini;});document.getElementById('sb-nm').textContent=user.name;document.getElementById('mp-nm').textContent=user.name;document.getElementById('mp-hdl').innerHTML=`@${user.name.toLowerCase().replace(/ /g,'')} · <span style="color:${user.role==='freelancer'?'var(--accent)':'var(--green)'};">${user.role==='client'?'Client':'Freelancer'}</span>`;document.getElementById('s-nm').value=user.name;const badge=document.getElementById('sb-bg');badge.textContent=user.role==='client'?'Client':'Freelancer';badge.className='ubadge '+(user.role==='client'?'bc':'bf');if(user.role==='client'){document.getElementById('jlbl').textContent='Manage Jobs';document.getElementById('j-ph').textContent='Manage Jobs';document.getElementById('postjob-btn').style.display='block';document.getElementById('mp-rate-wrap').innerHTML='<span class="rate-badge" style="color:var(--green);">🏢 '+(user.company||'My Company')+'</span>';document.getElementById('mp-skills').innerHTML='<span class="stag green">Client</span><span class="stag green">Hiring</span>';}else{document.getElementById('mp-rate-wrap').innerHTML=`<span class="rate-badge">💰 $${user.rate||25}/hr</span>`;}renderPosts();}
+async function launch(){
+  document.querySelectorAll('.ascreen').forEach(s=>s.classList.remove('active'));
+  document.getElementById('app').classList.add('active');
+
+  // Load full profile from DB (avatar, username, bio, skills, etc.)
+  if(user.id){
+    try{
+      const {data:profile} = await sb.from('profiles').select('*').eq('id',user.id).single();
+      if(profile){
+        user.avatarUrl = profile.avatar_url || '';
+        user.username = profile.username || user.name.toLowerCase().replace(/ /g,'');
+        user.bio = profile.bio || '';
+        user.location = profile.location || '';
+        user.skill = profile.skill || user.skill;
+        user.rate = profile.rate || user.rate;
+        user.company = profile.company || user.company;
+        user.industry = profile.industry || user.industry;
+        if(profile.full_name) { user.name = profile.full_name; user.ini = ini(user.name); }
+      }
+    }catch(e){console.log('profile load:',e);}
+  }
+
+  // Set avatars everywhere
+  ['sb-av','tb-av','c-av','mp-av','my-av'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el){
+      if(user.avatarUrl){
+        el.style.backgroundImage='url('+user.avatarUrl+')';
+        el.style.backgroundSize='cover';
+        el.style.backgroundPosition='center';
+        el.style.backgroundRepeat='no-repeat';
+        el.textContent='';
+      } else {
+        el.textContent=user.ini;
+        el.style.backgroundImage='';
+      }
+    }
+  });
+
+  document.getElementById('sb-nm').textContent=user.name;
+  document.getElementById('mp-nm').textContent=user.name;
+  document.getElementById('mp-hdl').innerHTML=`@${user.username||user.name.toLowerCase().replace(/ /g,'')} · <span style="color:${user.role==='freelancer'?'var(--accent)':'var(--green)'};">${user.role==='client'?'Client':'Freelancer'}</span>`;
+  document.getElementById('s-nm').value=user.name;
+  if(user.bio) document.getElementById('mp-bio').textContent=user.bio;
+  const badge=document.getElementById('sb-bg');
+  badge.textContent=user.role==='client'?'Client':'Freelancer';
+  badge.className='ubadge '+(user.role==='client'?'bc':'bf');
+  if(user.role==='client'){
+    document.getElementById('jlbl').textContent='Manage Jobs';
+    document.getElementById('j-ph').textContent='Manage Jobs';
+    document.getElementById('postjob-btn').style.display='block';
+    document.getElementById('mp-rate-wrap').innerHTML='<span class="rate-badge" style="color:var(--green);">🏢 '+(user.company||'My Company')+'</span>';
+    document.getElementById('mp-skills').innerHTML='<span class="stag green">Client</span><span class="stag green">Hiring</span>';
+  } else {
+    document.getElementById('mp-rate-wrap').innerHTML=`<span class="rate-badge">💰 $${user.rate||25}/hr</span>`;
+  }
+}
 async function logout(){
   await sb.auth.signOut();
   document.getElementById('app').classList.remove('active');
@@ -784,7 +874,10 @@ async function logout(){
 function nav(page,el){document.querySelectorAll('.ni').forEach(n=>n.classList.remove('on'));if(el)el.classList.add('on');document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.getElementById('p-'+page).classList.add('active');const t={feed:'Feed',network:'My Network',explore:'Explore',notifications:'Notifications',messages:'Messages',jobs:user.role==='client'?'Manage Jobs':'Browse Jobs',myprofile:'My Profile',pricing:'Pricing & Plans',settings:'Settings',pubprof:'Profile'};document.getElementById('tb-t').textContent=t[page]||page;}
 
 function renderPosts(){
-  const all=[...myPosts,...posts];
+  let all=[...myPosts,...posts];
+  if(currentFeedTab==='following'){
+    all=all.filter(p=>p.realId===user.id||myConnections.has(p.realId));
+  }
   const feedEl=document.getElementById('feed-list');
   if(!feedEl)return;
   if(all.length===0){
@@ -1093,6 +1186,10 @@ function showAuthError(screen, msg){
 }
 
 // Check if user already logged in on page load
+window.addEventListener('load', ()=>{
+  const sbState=localStorage.getItem('ideax-sidebar');
+  if(sbState==='collapsed'){const sb=document.getElementById('sidebar');if(sb)sb.classList.add('collapsed');}
+});
 window.addEventListener('load', async ()=>{
   const {data:{session}}=await sb.auth.getSession();
   if(session){
@@ -1804,6 +1901,23 @@ async function submitPost(){
       }
     }catch(e){console.error('post save:',e);}
   }
+}
+
+
+// ============ SIDEBAR COLLAPSE ============
+function toggleSidebar(){
+  const sb=document.getElementById('sidebar');
+  sb.classList.toggle('collapsed');
+  localStorage.setItem('ideax-sidebar', sb.classList.contains('collapsed')?'collapsed':'open');
+}
+
+// ============ FEED TABS (For You / Following) ============
+let currentFeedTab='foryou';
+function switchFeedTab(tab){
+  currentFeedTab=tab;
+  document.getElementById('tab-foryou').classList.toggle('active',tab==='foryou');
+  document.getElementById('tab-following').classList.toggle('active',tab==='following');
+  renderPosts();
 }
 
 </script>
