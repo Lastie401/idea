@@ -292,16 +292,43 @@ canvas#stars{position:fixed;inset:0;z-index:0;pointer-events:none;}
 .show-comments-btn:hover{text-decoration:underline;}
 
 
-/* COLLAPSIBLE SIDEBAR */
-.sb{transition:width .25s ease;position:relative;}
-.sb.collapsed{width:72px;}
-.sb.collapsed .uname,.sb.collapsed .ubadge,.sb.collapsed .nsec,.sb.collapsed .sb-logo span,
-.sb.collapsed .ni span:not(.nic),.sb.collapsed .nb,.sb.collapsed .bsm-text{display:none;}
-.sb.collapsed .ni{justify-content:center;padding:10px;margin:1px 8px;}
-.sb.collapsed .sb-me{justify-content:center;padding:11px 0;}
+/* X-STYLE SIDEBAR */
+.sb{transition:width .25s ease;position:relative;display:flex;flex-direction:column;}
+.sb-nav{flex:1;display:flex;flex-direction:column;gap:2px;padding:8px 12px;overflow-y:auto;}
+.sb-nav .ni{display:flex;align-items:center;gap:18px;padding:11px 16px;border-radius:30px;cursor:pointer;color:var(--text);font-size:16px;font-weight:500;transition:.15s;margin:0;font-family:var(--fb);}
+.sb-nav .ni:hover{background:var(--bg4);}
+.sb-nav .ni.on{font-weight:800;}
+.sb-nav .nic{font-size:23px;width:24px;text-align:center;flex-shrink:0;}
+.sb-nav .nb{margin-left:auto;background:var(--accent);color:#fff;font-size:10px;padding:1px 6px;border-radius:10px;font-weight:700;}
+.sb-post-btn{margin:8px 16px;padding:14px;border:none;border-radius:30px;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;font-family:var(--fh);font-size:15px;font-weight:800;cursor:pointer;transition:.2s;display:flex;align-items:center;justify-content:center;gap:8px;}
+.sb-post-btn:hover{opacity:.9;}
+.sb-post-icon{display:none;}
+.sbfoot{padding:8px;border-top:none;margin-top:auto;position:relative;}
+.sb-me{display:flex;align-items:center;gap:10px;padding:10px;border-radius:30px;cursor:pointer;transition:.15s;}
+.sb-me:hover{background:var(--bg4);}
+.sb-me-info{flex:1;min-width:0;overflow:hidden;}
+.sb-me-info .uname{font-size:14px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.sb-handle{font-size:12px;color:var(--text3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.sb-dots{font-size:18px;color:var(--text2);flex-shrink:0;}
+.sb-user-menu{display:none;position:absolute;bottom:calc(100% + 6px);left:8px;right:8px;background:var(--bg2);border:1px solid var(--border2);border-radius:14px;box-shadow:0 8px 24px rgba(0,0,0,.4);overflow:hidden;z-index:50;}
+.sb-user-menu.show{display:block;}
+.sb-menu-item{display:flex;align-items:center;gap:12px;padding:13px 16px;font-size:14px;font-weight:600;color:var(--text);cursor:pointer;transition:.15s;}
+.sb-menu-item:hover{background:var(--bg4);}
+.sb-menu-item .nic{font-size:18px;width:20px;}
+.sb-menu-divider{height:1px;background:var(--border);margin:2px 0;}
+
+/* COLLAPSED STATE */
+.sb.collapsed{width:88px;}
+.sb.collapsed .sb-logo span{display:none;}
 .sb.collapsed .sb-logo{justify-content:center;padding:16px 0 12px;}
-.sb.collapsed .nic{font-size:19px;}
-.sb.collapsed .sbfoot .bsm{padding:8px;}
+.sb.collapsed .sb-nav .ni{justify-content:center;padding:12px;}
+.sb.collapsed .sb-nav .ni span:not(.nic),.sb.collapsed .nb{display:none;}
+.sb.collapsed .sb-post-btn{padding:14px;border-radius:50%;width:52px;height:52px;margin:8px auto;}
+.sb.collapsed .sb-post-text{display:none;}
+.sb.collapsed .sb-post-icon{display:inline;font-size:20px;}
+.sb.collapsed .sb-me{justify-content:center;padding:10px;}
+.sb.collapsed .sb-me-info,.sb.collapsed .sb-dots{display:none;}
+.sb.collapsed .sb-user-menu{left:8px;right:auto;width:200px;}
 .sb-collapse-btn{position:absolute;top:14px;right:-12px;width:24px;height:24px;border-radius:50%;background:var(--bg3);border:1px solid var(--border2);color:var(--text2);font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:10;transition:.2s;}
 .sb-collapse-btn:hover{background:var(--accent);color:#fff;border-color:var(--accent);}
 .sb.collapsed .sb-collapse-btn{transform:rotate(180deg);}
@@ -314,10 +341,6 @@ canvas#stars{position:fixed;inset:0;z-index:0;pointer-events:none;}
 .feed-tab.active::after{content:'';position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:56px;height:3px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:3px 3px 0 0;}
 .feed-content-wrap{padding-top:18px;}
 
-
-.sb.collapsed .bsm{display:flex;align-items:center;justify-content:center;}
-.sb.collapsed .bsm-text{display:none;}
-.sb.collapsed .bsm-icon-only{display:inline !important;}
 
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -428,19 +451,34 @@ canvas#stars{position:fixed;inset:0;z-index:0;pointer-events:none;}
   <div class="sb" id="sidebar">
     <div class="sb-collapse-btn" onclick="toggleSidebar()">‹</div>
     <div class="sb-logo"><svg viewBox="0 0 26 26" fill="none"><polygon points="13,1 25,7 25,19 13,25 1,19 1,7" fill="#061525"/><circle cx="13" cy="13" r="4" fill="url(#gs)"/><defs><radialGradient id="gs"><stop offset="0%" stop-color="#00b4ff"/><stop offset="100%" stop-color="#1e90ff"/></radialGradient></defs></svg><span>IDEAX</span></div>
-    <div class="sb-me" onclick="nav('myprofile',null)"><div class="av" id="sb-av">JD</div><div><div class="uname" id="sb-nm">John Doe</div><span class="ubadge bf" id="sb-bg">Freelancer</span></div></div>
-    <div class="nsec">Main</div>
-    <div class="ni on" onclick="nav('feed',this)"><span class="nic">🏠</span><span>Feed</span></div>
-    <div class="ni" onclick="nav('network',this)"><span class="nic">🌐</span><span>Network</span></div>
-    <div class="ni" onclick="nav('explore',this)"><span class="nic">🔍</span><span>Explore</span></div>
-    <div class="ni" onclick="nav('notifications',this)"><span class="nic">🔔</span><span>Notifications</span><span class="nb">4</span></div>
-    <div class="ni" onclick="nav('messages',this)"><span class="nic">💬</span><span>Messages</span><span class="nb">2</span></div>
-    <div class="nsec">Work</div>
-    <div class="ni" onclick="nav('jobs',this)"><span class="nic">💼</span><span id="jlbl">Browse Jobs</span></div>
-    <div class="ni" onclick="nav('myprofile',this)"><span class="nic">👤</span><span>My Profile</span></div>
-    <div class="ni" onclick="nav('pricing',this)"><span class="nic">💎</span><span>Pricing</span></div>
-    <div class="ni" onclick="nav('settings',this)"><span class="nic">⚙️</span><span>Settings</span></div>
-    <div class="sbfoot"><button class="bsm" style="width:100%;" onclick="logout()"><span class="bsm-text">← Log Out</span><span style="display:none;" class="bsm-icon-only">⏻</span></button></div>
+    <nav class="sb-nav">
+      <div class="ni on" onclick="nav('feed',this)"><span class="nic">🏠</span><span>Feed</span></div>
+      <div class="ni" onclick="nav('explore',this)"><span class="nic">🔍</span><span>Explore</span></div>
+      <div class="ni" onclick="nav('notifications',this)"><span class="nic">🔔</span><span>Notifications</span><span class="nb">4</span></div>
+      <div class="ni" onclick="nav('messages',this)"><span class="nic">💬</span><span>Messages</span><span class="nb">2</span></div>
+      <div class="ni" onclick="nav('network',this)"><span class="nic">🌐</span><span>Network</span></div>
+      <div class="ni" onclick="nav('jobs',this)"><span class="nic">💼</span><span id="jlbl">Jobs</span></div>
+      <div class="ni" onclick="nav('myprofile',this)"><span class="nic">👤</span><span>Profile</span></div>
+      <div class="ni" onclick="nav('pricing',this)"><span class="nic">💎</span><span>Premium</span></div>
+      <div class="ni" onclick="nav('settings',this)"><span class="nic">⚙️</span><span>Settings</span></div>
+    </nav>
+    <button class="sb-post-btn" onclick="focusCompose()"><span class="sb-post-text">Post</span><span class="sb-post-icon">✏️</span></button>
+    <div class="sbfoot">
+      <div class="sb-me" onclick="toggleUserMenu(event)">
+        <div class="av" id="sb-av">JD</div>
+        <div class="sb-me-info">
+          <div class="uname" id="sb-nm">John Doe</div>
+          <div class="sb-handle" id="sb-handle">@johndoe</div>
+        </div>
+        <div class="sb-dots">···</div>
+      </div>
+      <div class="sb-user-menu" id="sb-user-menu">
+        <div class="sb-menu-item" onclick="event.stopPropagation();nav('settings',null);closeUserMenu()"><span class="nic">⚙️</span> Settings</div>
+        <div class="sb-menu-item" onclick="event.stopPropagation();quickToggleTheme()"><span class="nic" id="theme-menu-icon">🌙</span> <span id="theme-menu-text">Dark mode</span></div>
+        <div class="sb-menu-divider"></div>
+        <div class="sb-menu-item" onclick="event.stopPropagation();logout()"><span class="nic">🚪</span> Log out</div>
+      </div>
+    </div>
   </div>
   <div class="main">
     <div class="topbar">
@@ -850,6 +888,7 @@ async function launch(){
   document.getElementById('sb-nm').textContent=user.name;
   document.getElementById('mp-nm').textContent=user.name;
   document.getElementById('mp-hdl').innerHTML=`@${user.username||user.name.toLowerCase().replace(/ /g,'')} · <span style="color:${user.role==='freelancer'?'var(--accent)':'var(--green)'};">${user.role==='client'?'Client':'Freelancer'}</span>`;
+  document.getElementById('sb-handle').textContent='@'+(user.username||user.name.toLowerCase().replace(/ /g,''));
   document.getElementById('s-nm').value=user.name;
   if(user.bio) document.getElementById('mp-bio').textContent=user.bio;
   const badge=document.getElementById('sb-bg');
@@ -1496,6 +1535,7 @@ function setTheme(theme){
     document.getElementById('theme-light').style.cssText='padding:7px 16px;border-radius:20px;border:1.5px solid var(--border2);background:transparent;color:var(--text2);font-size:12px;cursor:pointer;font-family:var(--fb);font-weight:600;';
   }
   localStorage.setItem('ideax-theme',theme);
+  updateThemeMenuLabel(theme);
 }
 
 // ============ TIME AGO ============
@@ -1918,6 +1958,48 @@ function switchFeedTab(tab){
   document.getElementById('tab-foryou').classList.toggle('active',tab==='foryou');
   document.getElementById('tab-following').classList.toggle('active',tab==='following');
   renderPosts();
+}
+
+
+// ============ USER MENU (X-style "..." menu) ============
+function toggleUserMenu(e){
+  e.stopPropagation();
+  const menu=document.getElementById('sb-user-menu');
+  menu.classList.toggle('show');
+}
+function closeUserMenu(){
+  document.getElementById('sb-user-menu').classList.remove('show');
+}
+document.addEventListener('click', function(e){
+  const menu=document.getElementById('sb-user-menu');
+  const me=document.querySelector('.sb-me');
+  if(menu && menu.classList.contains('show') && !menu.contains(e.target) && !me.contains(e.target)){
+    menu.classList.remove('show');
+  }
+});
+
+// ============ QUICK THEME TOGGLE (from user menu) ============
+function quickToggleTheme(){
+  const isLight=document.body.classList.contains('light-mode');
+  const newTheme=isLight?'dark':'light';
+  setTheme(newTheme);
+  updateThemeMenuLabel(newTheme);
+  closeUserMenu();
+}
+function updateThemeMenuLabel(theme){
+  const icon=document.getElementById('theme-menu-icon');
+  const text=document.getElementById('theme-menu-text');
+  if(theme==='light'){ if(icon)icon.textContent='☀️'; if(text)text.textContent='Light mode'; }
+  else { if(icon)icon.textContent='🌙'; if(text)text.textContent='Dark mode'; }
+}
+
+// ============ POST BUTTON -> focus compose ============
+function focusCompose(){
+  nav('feed', document.querySelector('.sb-nav .ni'));
+  setTimeout(()=>{
+    const ta=document.getElementById('c-tx');
+    if(ta){ ta.focus(); ta.scrollIntoView({behavior:'smooth',block:'center'}); }
+  }, 100);
 }
 
 </script>
