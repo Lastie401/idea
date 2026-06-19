@@ -1991,7 +1991,38 @@ async function logout(){
   go('s-home');myPosts=[];
   user={id:'',name:'',role:'freelancer',email:'',ini:'',skill:'',rate:25,avatarUrl:''};
 }
-function nav(page,el){document.querySelectorAll('.ni').forEach(n=>n.classList.remove('on'));if(el)el.classList.add('on');document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.getElementById('p-'+page).classList.add('active');const t={feed:'Feed',network:'My Network',explore:'Explore',notifications:'Notifications',messages:'Messages',jobs:user.role==='client'?'Manage Jobs':'Browse Jobs',myprofile:'My Profile',pricing:'Pricing & Plans',settings:'Settings',pubprof:'Profile'};document.getElementById('tb-t').textContent=t[page]||page;}
+function nav(page,el){
+  document.querySelectorAll('.ni').forEach(n=>n.classList.remove('on'));
+  if(el)el.classList.add('on');
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  const target=document.getElementById('p-'+page);
+  if(target)target.classList.add('active');
+  const t={feed:'Feed',network:'My Network',explore:'Explore',notifications:'Notifications',messages:'Messages',jobs:user.role==='client'?'Manage Jobs':'Browse Jobs',myprofile:'My Profile',pricing:'Pricing & Plans',settings:'Settings',pubprof:'Profile'};
+  document.getElementById('tb-t').textContent=t[page]||page;
+
+  // sync mobile bottom nav highlight
+  document.querySelectorAll('.mobile-nav-item').forEach(n=>n.classList.remove('active'));
+  const mobMap={feed:'mob-feed',explore:'mob-explore',notifications:'mob-notifications',messages:'mob-messages',myprofile:'mob-profile'};
+  if(mobMap[page]){const mEl=document.getElementById(mobMap[page]);if(mEl)mEl.classList.add('active');}
+
+  // pre-fill settings fields each time settings page opens
+  if(page==='settings'){
+    const nmEl=document.getElementById('s-nm'); if(nmEl)nmEl.value=user.name||'';
+    const unEl=document.getElementById('s-username'); if(unEl)unEl.value=user.username||'';
+    const bioEl=document.getElementById('s-bio'); if(bioEl)bioEl.value=user.bio||'';
+    const locEl=document.getElementById('s-location'); if(locEl)locEl.value=user.location||'';
+    const rateEl=document.getElementById('s-rate'); if(rateEl)rateEl.value=user.rate||'';
+    if(typeof loadSettings==='function')loadSettings();
+  }
+
+  // refresh messages list / open default chat first time
+  if(page==='messages'){
+    const dmList=document.querySelector('.dm-list');
+    if(dmList && !dmList.querySelector('.dmi.on') && dmList.querySelector('.dmi')){
+      dmList.querySelector('.dmi').classList.add('on');
+    }
+  }
+}
 
 function renderPosts(){
   let all=[...myPosts,...posts];
@@ -3229,19 +3260,6 @@ function initiateStripe(){
   document.getElementById('payment-section').style.display='none';
 }
 
-// Pre-fill settings page when navigating to it
-const _origNav = nav;
-function nav(page, el){
-  _origNav(page, el);
-  if(page==='settings'){
-    document.getElementById('s-nm').value=user.name||'';
-    document.getElementById('s-username').value=user.username||'';
-    document.getElementById('s-bio').value=user.bio||'';
-    document.getElementById('s-location').value=user.location||'';
-    if(document.getElementById('s-rate'))document.getElementById('s-rate').value=user.rate||'';
-    loadSettings();
-  }
-}
 
 </script>
 
