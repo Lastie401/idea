@@ -1314,9 +1314,6 @@ async function launch(){
   document.getElementById('sb-handle').textContent='@'+(user.username||user.name.toLowerCase().replace(/ /g,''));
   document.getElementById('s-nm').value=user.name;
   if(user.bio) document.getElementById('mp-bio').textContent=user.bio;
-  const badge=document.getElementById('sb-bg');
-  badge.textContent=user.role==='client'?'Client':'Freelancer';
-  badge.className='ubadge '+(user.role==='client'?'bc':'bf');
   if(user.role==='client'){
     document.getElementById('jlbl').textContent='Manage Jobs';
     document.getElementById('j-ph').textContent='Manage Jobs';
